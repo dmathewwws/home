@@ -1,0 +1,9 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./shared" },
+    { "path": "./client" },
+    { "path": "./server" },
+    { "path": "./tsconfig.node.json" }
+  ]
+}

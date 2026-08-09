@@ -1,0 +1,42 @@
+# This is used in development only (Alchemy is used for production deployments).
+#
+# The host is the catch-all Worker that serves the landing grid. It also runs the admin
+# console, so it has its own D1 (operator allowlist) plus bindings to each managed child
+# app's D1. In `wrangler dev --local` every database_id is just a local storage key —
+# any unique string works and no Cloudflare account is needed. Keep the bindings in
+# sync with MANAGED_APPS in shared/src/apps.ts.
+
+name = "console-and-mini-apps-template-dev"
+main = "server/src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Host's own D1 — stores the operator allowlist (users.is_admin) that gates the console.
+[[d1_databases]]
+binding = "DB"
+database_name = "console-and-mini-apps-template-dev-db"
+database_id = "local"
+
+# Managed child app bindings go here — one block per app registered in
+# shared/src/apps.ts (MANAGED_APPS). The console sees its own empty local copy of
+# each child DB in dev, not the child's live data. Example:
+#
+# [[d1_databases]]
+# binding = "DB_<SLUG>"
+# database_name = "<workspace>-<slug>-mini-app-dev-db"
+# database_id = "<slug>-local"
+
+# Static assets (client build)
+# In dev: Vite serves the client at :5173 (this is unused).
+# In production: Alchemy uploads ./client/dist to Workers Assets.
+
+# ALLOWED_PRODUCTION_ORIGIN is the prod origin only — set it in alchemy.run.ts, and
+# leave it unset here so the JWT audience check is skipped in dev. Scaffolded apps get
+# their own port pair (5174/8788, 5175/8789, …), which a hardcoded localhost value
+# wouldn't match. Uncomment below only to pin the check to one local port on purpose.
+[vars]
+# ALLOWED_PRODUCTION_ORIGIN = "http://localhost:5173"
+
+# Dev server configuration
+[dev]
+port = 8787

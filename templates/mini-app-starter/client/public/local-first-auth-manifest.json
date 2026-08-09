@@ -1,0 +1,9 @@
+{
+  "name": "__SLUG_TITLE__",
+  "description": "A __SLUG_TITLE__ mini app",
+  "icon": "./icon.webp",
+  "type": "app",
+  "permissions": [
+    "profile"
+  ]
+}

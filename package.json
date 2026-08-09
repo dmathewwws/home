@@ -1,0 +1,24 @@
+{
+  "name": "console-and-mini-apps-template",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT",
+  "description": "Console And Mini Apps Template — the host console plus its mini apps, in one workspace.",
+  "packageManager": "pnpm@10.21.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "new-app": "tsx scripts/new-app.ts",
+    "setup-project": "tsx scripts/setup-project.ts",
+    "build": "pnpm --filter \"./apps/*\" run build",
+    "typecheck": "pnpm --filter \"./apps/*\" exec tsc -b && tsc -p scripts",
+    "clean": "pnpm --filter \"./apps/*\" exec rm -rf client/dist shared/dist"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "tsx": "^4.21.0",
+    "typescript": "~5.9.3"
+  }
+}
