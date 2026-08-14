@@ -19,7 +19,7 @@ import type { Env } from './types'
 import { createDb, type Database } from './db/client'
 import * as UserModel from './db/models/users'
 import { dbForSlug } from './admin-apps'
-import { decodeAndVerifyJWT } from '@console-and-mini-apps-template/console-shared'
+import { decodeAndVerifyJWT } from '@home/console-shared'
 
 const app = new Hono<{ Bindings: Env }>()
 

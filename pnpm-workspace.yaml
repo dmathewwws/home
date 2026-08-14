@@ -1,4 +1,4 @@
-# One workspace for the whole Console And Mini Apps Template monorepo.
+# One workspace for the whole Home monorepo.
 #
 # Each app under apps/ keeps its own client/server/shared trio, so the globs
 # reach one level into each app. `templates/` is deliberately EXCLUDED: the

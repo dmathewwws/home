@@ -1,6 +1,6 @@
 {
-  "name": "Console And Mini Apps Template",
-  "description": "The Console And Mini Apps Template directory of mini apps for you and your friends",
+  "name": "Home",
+  "description": "The Home directory of mini apps for you and your friends",
   "icon": "./icon.webp",
   "type": "app",
   "permissions": []

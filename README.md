@@ -1,6 +1,6 @@
-# Console And Mini Apps Template
+# Home
 
-A starter template for hosting a family of [Local First Auth](docs/local-first-auth-spec.md)
+A fork of the [console-and-mini-apps-template](https://github.com/antler-browser/console-and-mini-apps-template) template for hosting a family of [Local First Auth](docs/local-first-auth-spec.md)
 mini apps on one domain — a **host console** (landing grid + admin) plus as many
 **mini apps** as you scaffold, each an independent Cloudflare Worker, all in one pnpm
 workspace.

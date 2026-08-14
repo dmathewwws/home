@@ -1,8 +1,8 @@
-# Console And Mini Apps Template — Mini App Host
+# Home — Mini App Host
 
 ## Overview
 
-This repo is the **host** for a collection of Console And Mini Apps Template mini apps. It's a single catch-all
+This repo is the **host** for a collection of Home mini apps. It's a single catch-all
 Cloudflare Worker that:
 
 - serves a **landing grid** of mini apps at `/` (driven by `client/src/apps.ts`),

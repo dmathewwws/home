@@ -1,4 +1,4 @@
-# CLAUDE.md — Console And Mini Apps Template workspace
+# CLAUDE.md — Home workspace
 
 Guidance for Claude Code when working in this repository.
 

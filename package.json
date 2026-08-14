@@ -1,10 +1,10 @@
 {
-  "name": "console-and-mini-apps-template",
+  "name": "home",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
-  "description": "Console And Mini Apps Template — the host console plus its mini apps, in one workspace.",
+  "description": "Home — the host console plus its mini apps, in one workspace.",
   "packageManager": "pnpm@10.21.0",
   "engines": {
     "node": ">=22"
