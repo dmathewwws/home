@@ -46,7 +46,7 @@ bucket_name = "home-recipes-mini-app-dev-photos"
 # The R2_* presign values are deliberately NOT listed: absent in dev, they
 # flip photo uploads onto the worker's /api/dev-upload fallback route.
 [secrets]
-required = ["OPENAI_API_KEY"]
+required = []
 
 # ALLOWED_PRODUCTION_ORIGIN is the prod origin only — set it in alchemy.run.ts, and
 # leave it unset here so the JWT audience check is skipped in dev. Each scaffolded app

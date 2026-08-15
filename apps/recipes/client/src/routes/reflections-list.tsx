@@ -96,7 +96,7 @@ export function ReflectionsList() {
         left={<h1 className="h-display text-[clamp(34px,10vw,42px)]">Reflections</h1>}
         right={<span className="eyebrow !text-[10px]">{monthLabel}</span>}
       />
-      <div className="px-5 pb-[108px]">
+      <div className="page-col px-5 pb-[108px]">
         <FilterChips options={FILTERS} active={filter} onChange={setFilter} className="pt-1.5" />
         {error && <p className="text-sear text-[14px]">{error}</p>}
         {!error && !loading && filtered.length === 0 && (

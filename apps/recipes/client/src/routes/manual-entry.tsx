@@ -62,7 +62,7 @@ export function ManualEntry() {
     <section className="flex-1 flex flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto">
         <TopBar left={<BackButton to="/" label="Cancel" />} right={<span className="eyebrow">Typing it out</span>} />
-        <div className="px-5 pb-8">
+        <div className="page-col px-5 pb-8">
           <input
             className="write outline-none"
             placeholder="What's it called?"

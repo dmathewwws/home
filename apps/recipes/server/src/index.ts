@@ -19,9 +19,6 @@ import { decodeAndVerifyJWT } from '@home/recipes-shared'
 import { AuthError, authFromBody, requireOwnerOrAdmin } from './auth'
 import { ValidationError, validateRecipeInput, validateReflectionInput } from './validation'
 import { PHOTO_KEY_RE, canPresign, deletePhoto, photoKeys, uploadUrlFor } from './r2'
-import { NoTranscriptError, VideoLookupError, VideoUrlError, extractVideoId, fetchTranscript, fetchVideoMeta } from './youtube'
-import { CARD_MAX_CHARS } from './validation'
-import { ParseFailedError, ParseUnavailableError, parseRecipe } from './openai'
 
 // The app is served under /<slug>/ on the shared domain; basePath keeps every
 // handler's route written as /api/* while matching /<slug>/api/* on the wire.
@@ -340,58 +337,6 @@ app.post('/api/ingredients/frequent', async (c) => {
     return c.json({ ingredients })
   } catch (error) {
     return errorResponse(c, error, 'Failed to fetch frequent ingredients')
-  }
-})
-
-// ---------------------------------------------------------------------------
-// Video import — fetch transcript, parse with OpenAI. Persists NOTHING:
-// the client reviews the result and saves through POST /api/recipes.
-// ---------------------------------------------------------------------------
-
-/**
- * POST /api/parse-video - {url} → video meta + proposed recipe breakdown
- */
-app.post('/api/parse-video', async (c) => {
-  try {
-    const body = await c.req.json()
-    await authFromBody(c, body)
-    if (typeof body.url !== 'string' || !body.url.trim()) {
-      return c.json({ error: 'Missing url' }, 400)
-    }
-
-    const videoId = extractVideoId(body.url)
-    const { meta, captionTracks } = await fetchVideoMeta(videoId)
-    const transcript = await fetchTranscript(captionTracks)
-    const parse = await parseRecipe(c.env, {
-      title: meta.title,
-      author: meta.author,
-      transcript,
-    })
-
-    return c.json({
-      video: meta,
-      parse: {
-        ...parse,
-        stats: {
-          spokenSteps: parse.spokenSteps,
-          ingredientCount: parse.ingredients.length,
-          cardCount: parse.cards.length,
-          overLimit: parse.cards.filter((card) => card.text.length > CARD_MAX_CHARS).length,
-        },
-      },
-    })
-  } catch (error) {
-    if (error instanceof VideoUrlError) return c.json({ error: error.message, kind: 'bad-url' }, 400)
-    if (error instanceof VideoLookupError) return c.json({ error: error.message, kind: 'not-found' }, 404)
-    if (error instanceof NoTranscriptError) {
-      return c.json({ error: `${error.message} — type it out instead?`, kind: 'no-transcript' }, 422)
-    }
-    if (error instanceof ParseUnavailableError) return c.json({ error: error.message, kind: 'unavailable' }, 503)
-    if (error instanceof ParseFailedError) {
-      console.error('Parse failed:', error)
-      return c.json({ error: 'Could not make sense of that video — type it out instead?', kind: 'parse-failed' }, 502)
-    }
-    return errorResponse(c, error, 'Failed to parse video')
   }
 })
 

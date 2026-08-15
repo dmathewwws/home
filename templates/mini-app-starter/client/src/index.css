@@ -16,10 +16,6 @@
   /* Gradient colors for page background */
   --color-gradient-start: #faf5ff; /* purple-50 */
   --color-gradient-end: #eff6ff;   /* blue-50 */
-
-  /* QR panel gradient */
-  --color-qr-gradient-start: #e0e7ff; /* indigo-100 */
-  --color-qr-gradient-end: #f3e8ff;   /* purple-100 */
 }
 
 /* =============================================================================
@@ -27,6 +23,13 @@
    ============================================================================= */
 
 @layer components {
+  /* Centered content column: full-bleed page background, constrained content */
+  .page-col {
+    width: 100%;
+    max-width: 660px;
+    margin-inline: auto;
+  }
+
   /* Primary button - brand color with hover effects */
   .btn-primary {
     @apply bg-primary text-white rounded-full shadow-lg

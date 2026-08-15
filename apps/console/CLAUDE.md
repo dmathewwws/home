@@ -136,6 +136,9 @@ The console client has **no auth context/provider** — Settings uses `useOnboar
 from `local-first-auth/react` directly, and the Home route asks
 `getMemberStatus()` (`client/src/lib/memberApi.ts`), which restores
 `window.localFirstAuth` from the stored profile and calls `GET /api/member/status`.
+Both Home and Settings best-effort upsert the caller into the host D1 on mount via
+`syncProfileToDatabase()` (`client/src/lib/userApi.ts`) — this is what registers
+native-host (Antler) users, who never pass through the web profile editors.
 
 Landing-grid states (`Home` in `client/src/routes/home.tsx`):
 

@@ -1,17 +1,52 @@
 /**
- * Phone-frame chrome: top bar, bottom tabs, FAB, add sheet, save bar.
- * The mockup positioned these fixed to the viewport; inside the desktop
- * two-column layout that breaks, so the phone frame is a h-dvh flex column
- * and these live in normal flow / absolute within it.
+ * App chrome: app header, top bar, bottom tabs, FAB, add sheet, save bar.
+ * The app shell is a single full-viewport h-dvh overflow-hidden flex column;
+ * this chrome lives in normal flow / absolute within it (never fixed), and
+ * bar backgrounds stay full-bleed while their contents align to .page-col.
+ * Nav is duplicated, not morphed: TabBar (mobile, tab routes only) and the
+ * AppHeader pills (desktop, every route) have different lifecycles.
  */
 
 import { type ReactNode, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
+import { useLocalFirstAuth } from '../hooks/useLocalFirstAuth'
+
+/** Desktop-only header: brand line left, nav pills right. Hidden on mobile. */
+export function AppHeader() {
+  const { user } = useLocalFirstAuth()
+  const showNav = !!user && (user.isMember || user.isAdmin)
+  const pillClass = ({ isActive }: { isActive: boolean }) =>
+    `font-mono2 text-[11px] tracking-[0.1em] uppercase px-3.5 py-1.5 ${
+      isActive
+        ? 'bg-kraft-lift border border-rule text-ink shadow-[0_1px_0_#0000001a]'
+        : 'text-muted'
+    }`
+
+  return (
+    <div className="hidden md:block">
+      <div className="page-col px-5 pt-5 pb-2 flex items-center justify-between">
+        <span className="font-display font-semibold text-[15px] tracking-[-0.01em]">
+          Recipe <span className="text-muted">Box</span>
+        </span>
+        {showNav && (
+          <nav className="flex items-center gap-1.5">
+            <NavLink to="/" end className={pillClass}>
+              Recipes
+            </NavLink>
+            <NavLink to="/reflections" className={pillClass}>
+              Reflections
+            </NavLink>
+          </nav>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export function TopBar({ left, right }: { left: ReactNode; right?: ReactNode }) {
   return (
     <header className="sticky top-0 z-40 px-5 pt-6 pb-3.5 bg-gradient-to-b from-kraft from-[78%] to-transparent">
-      <div className="flex justify-between items-end gap-3">
+      <div className="page-col flex justify-between items-end gap-3">
         <div>{left}</div>
         {right ? <div className="pb-1">{right}</div> : null}
       </div>
@@ -41,7 +76,7 @@ export function TabBar() {
     isActive ? <span className="absolute -top-0.5 left-[22%] right-[22%] h-1 bg-yolk" /> : null
 
   return (
-    <nav className="grid grid-cols-2 bg-kraft border-t-2 border-ink pb-[env(safe-area-inset-bottom)] text-center" role="tablist">
+    <nav className="md:hidden grid grid-cols-2 bg-kraft border-t-2 border-ink pb-[env(safe-area-inset-bottom)] text-center" role="tablist">
       <NavLink to="/" end className={tabClass} role="tab">
         {({ isActive }) => (
           <>
@@ -68,7 +103,7 @@ export function Fab({ label, onClick }: { label: string; onClick: () => void }) 
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="absolute z-[56] right-[18px] bottom-[calc(78px+env(safe-area-inset-bottom))] w-[60px] h-[60px] bg-yolk text-ink border-2 border-ink rounded-full grid place-items-center shadow-[3px_4px_0_var(--color-ink)] transition-[transform,box-shadow] duration-150 active:translate-x-[3px] active:translate-y-[4px] active:shadow-none"
+      className="absolute z-[56] right-[18px] bottom-[calc(78px+env(safe-area-inset-bottom))] md:right-[calc(50%-312px)] md:bottom-8 w-[60px] h-[60px] bg-yolk text-ink border-2 border-ink rounded-full grid place-items-center shadow-[3px_4px_0_var(--color-ink)] transition-[transform,box-shadow] duration-150 active:translate-x-[3px] active:translate-y-[4px] active:shadow-none"
     >
       <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round">
         <path d="M12 5v14M5 12h14" />
@@ -82,7 +117,7 @@ interface AddSheetProps {
   onClose: () => void
 }
 
-/** Bottom sheet: "Paste a video link" and "Type it out" as peers. */
+/** Bottom sheet: "Paste recipe JSON" and "Type it out" as peers. */
 export function AddSheet({ open, onClose }: AddSheetProps) {
   const navigate = useNavigate()
 
@@ -110,7 +145,7 @@ export function AddSheet({ open, onClose }: AddSheetProps) {
         role="dialog"
         aria-label="Add a recipe"
         aria-hidden={!open}
-        className={`absolute z-[58] bottom-0 inset-x-0 bg-kraft border-t-2 border-ink px-5 pt-2.5 pb-[calc(18px+env(safe-area-inset-bottom))] transition-transform duration-300 ease-[cubic-bezier(.2,.8,.3,1)] ${
+        className={`absolute z-[58] bottom-0 inset-x-0 md:max-w-[660px] md:mx-auto md:border-x-2 bg-kraft border-t-2 border-ink px-5 pt-2.5 pb-[calc(18px+env(safe-area-inset-bottom))] transition-transform duration-300 ease-[cubic-bezier(.2,.8,.3,1)] ${
           open ? 'translate-y-0' : 'translate-y-[102%]'
         }`}
       >
@@ -125,13 +160,13 @@ export function AddSheet({ open, onClose }: AddSheetProps) {
           <span className="w-[42px] h-[42px] flex-none border-[1.5px] border-ink block" aria-hidden>
             <svg viewBox="0 0 100 100" className="block w-full h-full">
               <rect width="100" height="100" fill="#9C3B14" />
-              <path d="M40 32l30 18-30 18z" fill="#E0D0B0" />
+              <text x="50" y="64" textAnchor="middle" fontFamily="monospace" fontSize="44" fontWeight="bold" fill="#E0D0B0">{'{}'}</text>
             </svg>
           </span>
           <span className="flex-1">
-            <b className="font-display font-semibold text-[16.5px] block tracking-[-0.01em]">Paste a video link</b>
+            <b className="font-display font-semibold text-[16.5px] block tracking-[-0.01em]">Paste recipe JSON</b>
             <em className="font-mono2 not-italic text-[10px] tracking-[0.09em] uppercase text-muted block mt-1 leading-[1.4]">
-              Youtube &middot; broken into cards
+              From your import tool &middot; lands on review
             </em>
           </span>
           <span className="font-mono2 text-muted">&rarr;</span>
@@ -179,9 +214,11 @@ interface SaveBarProps {
 export function SaveBar({ label, onClick, disabled }: SaveBarProps) {
   return (
     <div className="bg-kraft border-t-2 border-ink px-5 py-[13px] pb-[calc(13px+env(safe-area-inset-bottom))]">
-      <button type="button" className="save-btn" onClick={onClick} disabled={disabled}>
-        {label}
-      </button>
+      <div className="page-col">
+        <button type="button" className="save-btn" onClick={onClick} disabled={disabled}>
+          {label}
+        </button>
+      </div>
     </div>
   )
 }

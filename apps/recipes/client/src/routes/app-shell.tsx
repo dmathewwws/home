@@ -1,17 +1,19 @@
 /**
- * Phone-frame layout route wrapping every screen: a 412px-max kraft column
+ * App-shell layout route wrapping every screen: a full-viewport kraft column
  * with paper grain, holding the household gate — logged-out visitors get the
  * onboarding trigger, signed-in non-members get the waiting screen, members
- * get the app.
+ * get the app. Content aligns to a centered .page-col; the desktop AppHeader
+ * (brand + nav pills) sits above everything, outside the scroll containers.
  */
 
 import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useLocalFirstAuth } from '../hooks/useLocalFirstAuth'
+import { AppHeader } from '../components/Chrome'
 
 function GateScreen({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex-1 flex flex-col justify-center px-5 pb-24">{children}</div>
+    <div className="flex-1 flex flex-col justify-center px-5 pb-24 page-col">{children}</div>
   )
 }
 
@@ -28,11 +30,10 @@ function LoggedOut() {
       <button
         type="button"
         onClick={() => setIsOnboardingModalOpen(true)}
-        className="save-btn mt-8 md:hidden"
+        className="save-btn mt-8 md:self-start md:!w-auto md:px-10"
       >
         Add yourself
       </button>
-      <p className="eyebrow mt-8 hidden md:block">Scan the code with Antler Browser to join</p>
     </GateScreen>
   )
 }
@@ -63,7 +64,7 @@ function Waiting() {
   )
 }
 
-export function PhoneFrame() {
+export function AppShell() {
   const { user, loading } = useLocalFirstAuth()
 
   let content: React.ReactNode
@@ -82,7 +83,8 @@ export function PhoneFrame() {
   }
 
   return (
-    <div className="relative mx-auto w-full max-w-[412px] h-dvh bg-kraft overflow-hidden flex flex-col paper-grain shadow-[0_0_0_1px_#0006,0_30px_90px_-20px_#000a]">
+    <div className="relative w-full h-dvh bg-kraft overflow-hidden flex flex-col paper-grain">
+      <AppHeader />
       {content}
     </div>
   )

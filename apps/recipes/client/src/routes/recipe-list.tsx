@@ -97,7 +97,7 @@ export function RecipeList() {
       <TopBar
         left={<h1 className="h-display text-[clamp(34px,10vw,42px)]">Recipe&nbsp;Box</h1>}
       />
-      <div className="px-5 pb-[108px]">
+      <div className="page-col px-5 pb-[108px]">
         <SearchBox value={query} onChange={setQuery} placeholder="Search recipes or ingredients" className="mb-3.5" />
         <FilterChips options={FILTERS} active={filter} onChange={setFilter} />
         {error && <p className="text-sear text-[14px]">{error}</p>}

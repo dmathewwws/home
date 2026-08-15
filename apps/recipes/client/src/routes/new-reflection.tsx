@@ -74,7 +74,7 @@ export function NewReflection() {
     <section className="flex-1 flex flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto">
         <TopBar left={<BackButton to="/reflections" label="Cancel" />} right={<span className="eyebrow">{today}</span>} />
-        <div className="px-5 pb-8">
+        <div className="page-col px-5 pb-8">
           <h1 className="h-display text-[clamp(34px,10vw,42px)]">How did it&nbsp;go?</h1>
 
           <div className="mt-5">

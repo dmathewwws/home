@@ -16,10 +16,10 @@ export function Home() {
         </div>
       )}
 
-      {/* "Add yourself" button - only show on mobile */}
+      {/* "Add yourself" button - opens the onboarding modal */}
       <button
         onClick={() => setIsOnboardingModalOpen(true)}
-        className="w-full btn-primary px-8 py-4 text-lg z-40 md:hidden"
+        className="w-full btn-primary px-8 py-4 text-lg z-40"
       >
         Add yourself
       </button>

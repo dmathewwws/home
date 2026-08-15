@@ -29,10 +29,4 @@ export interface Env {
   R2_SECRET_ACCESS_KEY?: string
   R2_ACCOUNT_ID?: string
   R2_BUCKET_NAME?: string
-
-  // OpenAI key for the video-import parser (transcript → ingredients + cards).
-  // Dev: plain string from `.env` via [secrets] required in wrangler.toml.
-  // Prod: Worker secret bound via alchemy.secret.env in alchemy.run.ts.
-  // When unset, /api/parse-video returns 503 and manual entry still works.
-  // OPENAI_API_KEY?: string
 }

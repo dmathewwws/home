@@ -26,7 +26,6 @@ This is a pnpm workspace monorepo with three packages:
 #### Client (`/client/`)
 
 - `/client/src/components/` - React components
-  - `QRCodePanel.tsx` - QR code for app (hidden on mobile, visible on desktop)
   - `Avatar.tsx` - User avatar or placeholder
   - `AdminSection.tsx` - Admin-only controls for resetting the event
   - `Footer.tsx` - Footer with attribution link
@@ -195,8 +194,8 @@ Defined inline in `/server/src/durable-object.ts` and `/server/src/index.ts`.
 
 ### Responsive Layout
 
-- **Mobile**: Single column, QR code hidden
-- **Desktop**: Two columns with QR code panel on left
+- **Mobile**: Full-bleed single column
+- **Desktop**: Same single column, centered at 660px max width (`.page-col`) over a full-bleed page background
 
 ---
 
@@ -297,7 +296,6 @@ No manual migration steps needed - everything is handled by `alchemy.run.ts` con
 - **React** - UI framework
 - **Tailwind CSS** - Utility-first CSS framework
 - **React Router** - Routing for the app
-- **qrcode.react** - QR code generation
 - **local-first-auth** - Authentication library using the Local First Auth spec
 - **local-first-auth-simulator** - Simulates different test users (dev only)
 - **Vite** - Build tool and dev server

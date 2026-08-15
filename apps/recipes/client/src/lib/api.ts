@@ -7,7 +7,6 @@
 
 import type {
   Ingredient,
-  ParseVideoResult,
   RecipeDraft,
   RecipeFull,
   RecipeListItem,
@@ -75,9 +74,6 @@ export const searchIngredients = (getJwt: GetJwt, q: string) =>
 
 export const frequentIngredients = (getJwt: GetJwt) =>
   post<{ ingredients: Ingredient[] }>(getJwt, 'ingredients/frequent').then((r) => r.ingredients)
-
-export const parseVideo = (getJwt: GetJwt, url: string) =>
-  post<ParseVideoResult>(getJwt, 'parse-video', { url })
 
 export const listReflections = (getJwt: GetJwt) =>
   post<{ reflections: ReflectionListItem[] }>(getJwt, 'reflections/list').then((r) => r.reflections)

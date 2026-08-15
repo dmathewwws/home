@@ -41,7 +41,7 @@ export function RecipeDetail() {
     return (
       <section className="flex-1 flex flex-col">
         <TopBar left={<BackButton to="/" label="Recipe Box" />} />
-        <p className="px-5 text-sear text-[14px]">{error}</p>
+        <p className="page-col px-5 text-sear text-[14px]">{error}</p>
       </section>
     )
   }
@@ -49,7 +49,7 @@ export function RecipeDetail() {
     return (
       <section className="flex-1 flex flex-col">
         <TopBar left={<BackButton to="/" label="Recipe Box" />} />
-        <p className="px-5 eyebrow">Opening the card&hellip;</p>
+        <p className="page-col px-5 eyebrow">Opening the card&hellip;</p>
       </section>
     )
   }
@@ -76,7 +76,7 @@ export function RecipeDetail() {
           </span>
         }
       />
-      <div className="px-5 pb-16">
+      <div className="page-col px-5 pb-16">
         <h1 className="h-display text-[clamp(34px,10vw,42px)]">{recipe.title}</h1>
         {recipe.sourceType === 'video' && recipe.sourceUrl ? (
           <a className="mono-link inline-block mt-3.5" href={recipe.sourceUrl} target="_blank" rel="noreferrer">

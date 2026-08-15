@@ -19,7 +19,10 @@ async function addUserToDatabase(profileJwt: string): Promise<void> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ profileJwt }),
   })
-  if (!res.ok) throw new Error('Failed to add user')
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { message?: string; error?: string } | null
+    throw new Error(body?.message ?? body?.error ?? `Failed to add user (HTTP ${res.status})`)
+  }
 }
 
 async function addAvatarToDatabase(avatarJwt: string): Promise<void> {
@@ -28,21 +31,29 @@ async function addAvatarToDatabase(avatarJwt: string): Promise<void> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ avatarJwt }),
   })
-  if (!res.ok) throw new Error('Failed to add avatar')
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { message?: string; error?: string } | null
+    throw new Error(body?.message ?? body?.error ?? `Failed to add avatar (HTTP ${res.status})`)
+  }
 }
 
+export type SyncResult = { ok: true } | { ok: false; error: string }
+
 /**
- * Upsert the current Local First Auth profile into the host DB. Best-effort: errors are
- * logged, never thrown, so they don't block the Settings UI. Avatar is optional.
+ * Upsert the current Local First Auth profile into the host DB. Best-effort: never throws,
+ * so it can't block the UI; the result reports failures for callers that surface them.
+ * Signed out (no API) counts as ok — there is nothing to sync. Avatar is optional.
  */
-export async function syncProfileToDatabase(): Promise<void> {
+export async function syncProfileToDatabase(): Promise<SyncResult> {
   const api = getApi()
-  if (!api) return
+  if (!api) return { ok: true }
   try {
     await addUserToDatabase(await api.getProfileDetails())
     const avatarJwt = await api.getAvatar()
     if (avatarJwt) await addAvatarToDatabase(avatarJwt)
+    return { ok: true }
   } catch (err) {
     console.error('Error syncing profile to database:', err)
+    return { ok: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }

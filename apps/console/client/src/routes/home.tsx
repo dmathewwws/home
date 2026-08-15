@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apps, type MiniApp } from '../apps'
 import { getMemberStatus, type MemberStatus } from '../lib/memberApi'
+import { syncProfileToDatabase } from '../lib/userApi'
 
 /** Card classes shared by external (cross-document) and internal (host route) links. */
 const cardClasses =
@@ -16,6 +17,10 @@ export function Home() {
     let cancelled = false
     getMemberStatus().then((status) => {
       if (!cancelled) setMemberStatus(status)
+      // Best-effort registration so an admin has a users row to approve: native-host
+      // (Antler) users land here and never pass through a profile editor. Runs after
+      // getMemberStatus(), which restores window.localFirstAuth for web users.
+      if (status !== 'signed-out') void syncProfileToDatabase()
     })
     return () => {
       cancelled = true

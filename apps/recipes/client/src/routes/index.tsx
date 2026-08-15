@@ -1,11 +1,11 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { App } from '../app'
-import { PhoneFrame } from './phone-frame'
+import { AppShell } from './app-shell'
 import { TabShell } from './tab-shell'
 import { RecipeList } from './recipe-list'
 import { RecipeDetail } from './recipe-detail'
 import { ReflectionsList } from './reflections-list'
-import { PasteLink } from './paste-link'
+import { PasteJson } from './paste-json'
 import { ImportReview } from './import-review'
 import { ManualEntry } from './manual-entry'
 import { NewReflection } from './new-reflection'
@@ -18,7 +18,7 @@ export const router = createBrowserRouter(
       element: <App />,
       children: [
         {
-          element: <PhoneFrame />,
+          element: <AppShell />,
           children: [
             {
               element: <TabShell />,
@@ -28,7 +28,7 @@ export const router = createBrowserRouter(
               ],
             },
             { path: 'recipe/:id', element: <RecipeDetail /> },
-            { path: 'add/paste', element: <PasteLink /> },
+            { path: 'add/paste', element: <PasteJson /> },
             { path: 'add/review', element: <ImportReview /> },
             { path: 'add/manual', element: <ManualEntry /> },
             { path: 'reflections/new', element: <NewReflection /> },

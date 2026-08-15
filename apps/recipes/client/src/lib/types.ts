@@ -109,33 +109,32 @@ export interface ReflectionDraft {
   photoId?: string | null
 }
 
-/** POST /api/parse-video response. */
-export interface ParsedIngredient {
+/**
+ * A pasted-JSON import, normalized by parseImportJson (lib/import-json.ts).
+ * Flows via navigation state into the review screen; the spec lives in
+ * docs/recipe-import-spec.md.
+ */
+export interface ImportIngredient {
   name: string
   role: IngredientRole
-  amount?: string
+  amount: string | null
   maybe: boolean
 }
 
-export interface ParseVideoResult {
-  video: {
-    videoId: string
-    title: string
-    author: string
-    durationSeconds: number | null
-    thumbUrl: string
-  }
-  parse: {
-    title: string
-    meal: Meal
-    minutes: number
-    ingredients: ParsedIngredient[]
-    cards: RecipeCard[]
-    stats: {
-      spokenSteps: number
-      ingredientCount: number
-      cardCount: number
-      overLimit: number
-    }
-  }
+export interface ImportSource {
+  type: SourceType
+  url: string | null
+  author: string | null
+  detail: string | null
+  thumbUrl: string | null
+}
+
+export interface ImportDraft {
+  title: string
+  meal: Meal
+  minutes: number
+  source: ImportSource
+  ingredients: ImportIngredient[]
+  cards: RecipeCard[]
+  swaps: RecipeSwap[]
 }

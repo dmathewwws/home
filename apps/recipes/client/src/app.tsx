@@ -1,7 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { Onboarding } from 'local-first-auth/react'
 import { AuthProvider, useLocalFirstAuth } from './hooks/useLocalFirstAuth'
-import { QRCodePanel } from './components/QRCodePanel'
 
 function Layout() {
   const {
@@ -15,31 +14,20 @@ function Layout() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-backdrop">
-        <div className="grid md:grid-cols-2 min-h-screen">
-          <QRCodePanel />
-          <div className="flex items-center justify-center px-4">
-            <div className="text-center max-w-md text-kraft">
-              <h1 className="h-display text-3xl mb-4">Something's off</h1>
-              <p className="text-kraft-deep">{error}</p>
-            </div>
-          </div>
+      <div className="relative min-h-dvh bg-kraft paper-grain flex items-center justify-center px-5">
+        <div className="page-col max-w-md flex flex-col items-center text-center">
+          <span className="tape mb-5">Well.</span>
+          <h1 className="h-display text-3xl mb-4 text-ink">Something's off</h1>
+          <p className="text-muted">{error}</p>
         </div>
       </div>
     )
   }
 
-  // Desktop: QR panel left, phone frame right. Mobile: just the phone frame.
+  // The app-shell route owns all visual framing (kraft bg, grain, header).
   return (
-    <div className="min-h-screen bg-backdrop">
-      <div className="grid md:grid-cols-2 min-h-screen">
-        <QRCodePanel />
-        <div className="flex flex-col">
-          <main className="flex-1 flex flex-col">
-            <Outlet />
-          </main>
-        </div>
-      </div>
+    <div className="min-h-dvh">
+      <Outlet />
 
       {/* Onboarding modal */}
       {isOnboardingModalOpen && (

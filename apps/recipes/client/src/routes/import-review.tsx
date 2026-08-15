@@ -1,6 +1,6 @@
 /**
- * "Check the breakdown" — review a parsed video before anything persists.
- * The parse result arrives via navigation state only; maybe-ingredients are
+ * "Check the breakdown" — review a pasted import before anything persists.
+ * The draft arrives via navigation state only; maybe-ingredients are
  * tapped to keep or drop; over-limit cards carry the sear "Split in two"
  * flag; the save button is the first moment anything is written.
  */
@@ -12,8 +12,8 @@ import { CardEditor, splitCard } from '../components/CardEditor'
 import { IngChip } from '../components/IngChip'
 import { useLocalFirstAuth } from '../hooks/useLocalFirstAuth'
 import * as api from '../lib/api'
-import { CARD_MAX_CHARS, MEALS, type Meal, type ParseVideoResult, type RecipeCard } from '../lib/types'
-import { MEAL_LABELS, mmss } from '../lib/format'
+import { CARD_MAX_CHARS, MEALS, type ImportDraft, type Meal, type RecipeCard } from '../lib/types'
+import { MEAL_LABELS } from '../lib/format'
 
 type MaybeState = 'maybe' | 'kept' | 'dropped'
 
@@ -21,15 +21,15 @@ export function ImportReview() {
   const location = useLocation()
   const navigate = useNavigate()
   const { getProfileJwt } = useLocalFirstAuth()
-  const result = location.state as ParseVideoResult | null
+  const result = location.state as ImportDraft | null
 
   // Hooks before the redirect guard (result never changes for a mounted instance)
-  const [title, setTitle] = useState(result?.parse.title ?? '')
-  const [meal, setMeal] = useState<Meal>(result?.parse.meal ?? 'main')
-  const [minutes, setMinutes] = useState(result?.parse.minutes ?? 30)
-  const [cards, setCards] = useState<RecipeCard[]>(result?.parse.cards ?? [])
+  const [title, setTitle] = useState(result?.title ?? '')
+  const [meal, setMeal] = useState<Meal>(result?.meal ?? 'main')
+  const [minutes, setMinutes] = useState(result?.minutes ?? 30)
+  const [cards, setCards] = useState<RecipeCard[]>(result?.cards ?? [])
   const [maybeState, setMaybeState] = useState<Record<string, MaybeState>>(() =>
-    Object.fromEntries((result?.parse.ingredients ?? []).filter((i) => i.maybe).map((i) => [i.name, 'maybe' as MaybeState])),
+    Object.fromEntries((result?.ingredients ?? []).filter((i) => i.maybe).map((i) => [i.name, 'maybe' as MaybeState])),
   )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,7 +37,7 @@ export function ImportReview() {
   const overCount = useMemo(() => cards.filter((c) => c.text.trim().length > CARD_MAX_CHARS).length, [cards])
   const keptIngredients = useMemo(
     () =>
-      (result?.parse.ingredients ?? []).filter((i) => {
+      (result?.ingredients ?? []).filter((i) => {
         const state = maybeState[i.name]
         return !i.maybe || state === 'kept' || state === 'maybe'
       }),
@@ -72,16 +72,16 @@ export function ImportReview() {
         title: title.trim(),
         meal,
         minutes,
-        sourceType: 'video',
-        sourceUrl: `https://www.youtube.com/watch?v=${result.video.videoId}`,
-        sourceAuthor: result.video.author,
-        sourceDetail: result.video.durationSeconds ? mmss(result.video.durationSeconds) : null,
-        thumbUrl: result.video.thumbUrl,
+        sourceType: result.source.type,
+        sourceUrl: result.source.url,
+        sourceAuthor: result.source.author,
+        sourceDetail: result.source.detail,
+        thumbUrl: result.source.thumbUrl,
         ingredients: keptIngredients
           .filter((i) => maybeState[i.name] !== 'dropped')
           .map((i) => ({ name: i.name, role: i.role, amount: i.amount ?? null })),
         cards: filled.map((c) => ({ text: c.text.trim(), ...(c.timer?.trim() ? { timer: c.timer.trim() } : {}) })),
-        swaps: [],
+        swaps: result.swaps,
       })
       navigate(`/recipe/${recipe.id}`, { replace: true })
     } catch (err) {
@@ -99,23 +99,28 @@ export function ImportReview() {
           left={<BackButton to="/add/paste" label="Cancel" />}
           right={
             <span className="eyebrow">
-              {result.parse.stats.spokenSteps} steps &rarr; {filledCount} cards
+              {filledCount} card{filledCount === 1 ? '' : 's'}
             </span>
           }
         />
-        <div className="px-5 pb-8">
+        <div className="page-col px-5 pb-8">
           <h1 className="h-display text-[clamp(34px,10vw,42px)]">Check the breakdown</h1>
 
-          <div className="flex gap-[13px] items-center bg-kraft-lift border border-rule p-3 mt-[18px]">
-            <img src={result.video.thumbUrl} alt="" aria-hidden className="w-[54px] h-[54px] flex-none object-cover border border-rule" />
-            <div className="min-w-0">
-              <b className="font-display font-semibold text-[15px] block leading-[1.15] tracking-[-0.01em]">{result.video.title}</b>
-              <em className="font-mono2 not-italic text-[10px] tracking-[0.1em] uppercase text-muted block mt-[5px]">
-                {result.video.author}
-                {result.video.durationSeconds ? ` · ${mmss(result.video.durationSeconds)}` : ''}
-              </em>
+          {(result.source.author || result.source.url || result.source.thumbUrl) && (
+            <div className="flex gap-[13px] items-center bg-kraft-lift border border-rule p-3 mt-[18px]">
+              {result.source.thumbUrl && (
+                <img src={result.source.thumbUrl} alt="" aria-hidden className="w-[54px] h-[54px] flex-none object-cover border border-rule" />
+              )}
+              <div className="min-w-0">
+                {result.source.author && (
+                  <b className="font-display font-semibold text-[15px] block leading-[1.15] tracking-[-0.01em]">{result.source.author}</b>
+                )}
+                <em className="font-mono2 not-italic text-[10px] tracking-[0.1em] uppercase text-muted block mt-[5px] truncate">
+                  {result.source.detail || result.source.url}
+                </em>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="my-[26px]">
             <span className="tape mb-3.5">Call it</span>
@@ -149,7 +154,7 @@ export function ImportReview() {
           <div className="my-[26px]">
             <span className="tape mb-3.5">Ingredients found</span>
             <div className="flex flex-wrap gap-[5px] mt-2">
-              {result.parse.ingredients.map((ing) => {
+              {result.ingredients.map((ing) => {
                 if (!ing.maybe) {
                   return <IngChip key={ing.name} name={ing.name} role={ing.role} amount={ing.amount ?? null} />
                 }

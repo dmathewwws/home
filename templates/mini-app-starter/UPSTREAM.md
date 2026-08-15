@@ -55,6 +55,11 @@ show these; keep the local versions:
   always use the trailing-slash form `/<slug>/`.
 - **`blocked` column** in the users schema (migration 0002) — required by the host
   console's admin Block action.
+- **QR panel removed / responsive single column** — upstream's desktop two-column
+  layout (QR code panel left, app right) is gone: `QRCodePanel.tsx`, the
+  `qrcode.react` dependency, and the `--color-qr-gradient-*` tokens were deleted.
+  Apps render as one full-bleed page with content in a centered 660px column
+  (`.page-col` in `index.css`), and the "Add yourself" button shows on all widths.
 
 Note: `pnpm setup-project --github-url … --allowed-production-origin …` writes your
 fork's values into this copy at setup time (the footer link in

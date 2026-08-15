@@ -26,16 +26,16 @@ This is a pnpm workspace monorepo with three packages:
 #### Client (`/client/`)
 
 - `/client/src/components/` - React components
-  - `QRCodePanel.tsx` - QR code for app (hidden on mobile, visible on desktop)
-  - `Avatar.tsx` - User avatar or placeholder
-  - `AdminSection.tsx` - Admin-only controls for resetting the event
-  - `Footer.tsx` - Footer with attribution link
+  - `Chrome.tsx` - App chrome: `AppHeader` (desktop brand + nav pills), `TopBar`, `TabBar` (mobile bottom tabs), `Fab`, `AddSheet`, `SaveBar`
 - `/client/src/hooks/` - React hooks
   - `useLocalFirstAuth.tsx` - Authentication state management, exports `AuthProvider` and `useLocalFirstAuth()` hook
   - `useWebSockets.ts` - WebSocket connection hook for real-time updates
 - `/client/src/routes/` - Route components
   - `index.tsx` - React Router root route
-  - `home.tsx` - Home page
+  - `app-shell.tsx` - Full-viewport kraft shell + household gate (loading / logged-out / waiting / member)
+  - `tab-shell.tsx` - Tab routes wrapper (recipe list + reflections) with FAB and bottom tabs
+  - `recipe-list.tsx`, `recipe-detail.tsx`, `reflections-list.tsx`, `new-reflection.tsx` - Main screens
+  - `paste-json.tsx`, `import-review.tsx`, `manual-entry.tsx` - Add-recipe flows (paste external-tool JSON → review, or type it out; see `docs/recipe-import-spec.md`)
   - `not-found.tsx` - 404 page
 - `/client/src/app.tsx` - Main component with React Router and Local First Auth integration
 - `/client/src/main.tsx` - Entry point (initializes Local First Auth Simulator when `VITE_ENABLE_LOCAL_FIRST_AUTH_SIMULATOR=true`)
@@ -66,6 +66,7 @@ This is a pnpm workspace monorepo with three packages:
 - `/docs/` - App-specific documentation
   - `admin-setup.md` - Admin setup instructions
   - `secrets.md` - The canonical secrets/env-var convention: three buckets, the `[secrets]` gate, `alchemy.secret.env` bindings
+  - `recipe-import-spec.md` - JSON contract for the "Paste recipe JSON" add flow (external tool → paste → review → save)
 - `../../docs/` - Workspace-shared reference docs
   - `local-first-auth-spec.md` - Local First Auth Specification
   - `mini-app-examples.md` - Reference examples and links to other mini apps
@@ -196,8 +197,8 @@ Defined inline in `/server/src/durable-object.ts` and `/server/src/index.ts`.
 
 ### Responsive Layout
 
-- **Mobile**: Single column, QR code hidden
-- **Desktop**: Two columns with QR code panel on left
+- **Mobile**: Full-bleed single column with a bottom tab bar
+- **Desktop (md, 768px+)**: Centered 660px content column (`.page-col`), tab bar replaced by nav pills in the `AppHeader` row
 
 ---
 
@@ -226,7 +227,6 @@ unauthenticated); clients refetch via the API.
 | `POST` | `/api/recipes/:id/delete` | Delete recipe | Owner/admin |
 | `POST` | `/api/ingredients/search` | Catalog search (`{q}`) | Member |
 | `POST` | `/api/ingredients/frequent` | "You use these a lot" tray | Member |
-| `POST` | `/api/parse-video` | YouTube transcript → OpenAI → proposed cards; persists nothing | Member |
 | `POST` | `/api/reflections/list` | Cooking journal, newest first | Member |
 | `POST` | `/api/reflections` | Log a cook (verifies R2 photo objects exist) | Member |
 | `POST` | `/api/reflections/:id/delete` | Delete reflection + R2 photo + cache purge | Owner/admin |
@@ -314,7 +314,6 @@ No manual migration steps needed - everything is handled by `alchemy.run.ts` con
 - **React** - UI framework
 - **Tailwind CSS** - Utility-first CSS framework
 - **React Router** - Routing for the app
-- **qrcode.react** - QR code generation
 - **local-first-auth** - Authentication library using the Local First Auth spec
 - **local-first-auth-simulator** - Simulates different test users (dev only)
 - **Vite** - Build tool and dev server

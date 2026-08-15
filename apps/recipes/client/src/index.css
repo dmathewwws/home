@@ -21,26 +21,16 @@
   --color-sear: #9C3B14;
   --color-herb: #5C6B3C;
 
-  /* Page backdrop behind the phone frame */
+  /* Dark scrim (add-sheet backdrop) */
   --color-backdrop: #181511;
 
   --font-display: "Bricolage Grotesque", system-ui, sans-serif;
   --font-body: "Newsreader", Georgia, serif;
   --font-mono2: "DM Mono", ui-monospace, monospace;
-
-  /* Legacy starter tokens (QR panel + onboarding modal still reference these) */
-  --color-primary: #241F1A;
-  --color-primary-hover: #3a332b;
-  --color-card: white;
-  --color-background: white;
-  --color-gradient-start: #E0D0B0;
-  --color-gradient-end: #CFBC96;
-  --color-qr-gradient-start: #EBDFC6;
-  --color-qr-gradient-end: #D9C48F;
 }
 
 body {
-  background: var(--color-backdrop);
+  background: var(--color-kraft);
   font-family: var(--font-body);
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
@@ -56,16 +46,14 @@ body {
    ============================================================================= */
 
 @layer components {
-  /* Legacy starter patterns (onboarding modal wrapper) */
-  .btn-primary {
-    @apply bg-primary text-white rounded-full shadow-lg
-           hover:bg-primary-hover transition-all hover:scale-105 font-semibold;
-  }
-  .card {
-    @apply bg-card rounded-lg shadow-lg;
+  /* Centered content column (~events-app 660px measure) */
+  .page-col {
+    width: 100%;
+    max-width: 660px;
+    margin-inline: auto;
   }
 
-  /* Paper grain overlay — apply to the phone frame */
+  /* Paper grain overlay — apply to the app shell */
   .paper-grain::after {
     content: "";
     position: absolute;

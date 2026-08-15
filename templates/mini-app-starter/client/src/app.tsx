@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Onboarding } from 'local-first-auth/react'
 import { AuthProvider, useLocalFirstAuth } from './hooks/useLocalFirstAuth'
-import { QRCodePanel } from './components/QRCodePanel'
 import { Footer } from './components/Footer'
 
 /**
@@ -18,7 +17,7 @@ function WaitingForMembership() {
   }, [refreshUser])
 
   return (
-    <div className="flex items-center justify-center px-4">
+    <div className="flex-1 flex items-center justify-center px-4">
       <div className="text-center max-w-md">
         <div className="text-6xl mb-6">🔒</div>
         <h1 className="text-3xl font-bold mb-4 text-gray-800">Members only</h1>
@@ -46,13 +45,8 @@ function Layout() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gradient-start to-gradient-end">
-        <div className="grid md:grid-cols-2 min-h-screen">
-          <QRCodePanel />
-          <div className="flex items-center justify-center px-4">
-            <div className="text-gray-500">Loading...</div>
-          </div>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-gradient-start to-gradient-end flex items-center justify-center px-4">
+        <div className="text-gray-500">Loading...</div>
       </div>
     )
   }
@@ -60,16 +54,11 @@ function Layout() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50">
-        <div className="grid md:grid-cols-2 min-h-screen">
-          <QRCodePanel />
-          <div className="flex items-center justify-center px-4">
-            <div className="text-center max-w-md">
-              <div className="text-6xl mb-6">⚠️</div>
-              <h1 className="text-3xl font-bold mb-4 text-gray-800">Error</h1>
-              <p className="text-gray-600">{error}</p>
-            </div>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-6">⚠️</div>
+          <h1 className="text-3xl font-bold mb-4 text-gray-800">Error</h1>
+          <p className="text-gray-600">{error}</p>
         </div>
       </div>
     )
@@ -79,22 +68,19 @@ function Layout() {
   // the normal onboarding flow inside the routes).
   const isWaiting = user && !user.isMember && !user.isAdmin
 
-  // Main layout with routes
+  // Main layout with routes: full-bleed gradient page, content in a centered column.
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gradient-start to-gradient-end">
-      <div className="grid md:grid-cols-2 min-h-screen">
-        <QRCodePanel />
-        {isWaiting ? (
-          <WaitingForMembership />
-        ) : (
-          <div className="flex flex-col px-4 py-8">
-            <main>
-              <Outlet />
-            </main>
-            <Footer />
-          </div>
-        )}
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gradient-start to-gradient-end flex flex-col">
+      {isWaiting ? (
+        <WaitingForMembership />
+      ) : (
+        <div className="page-col flex-1 flex flex-col px-4 py-8">
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          <Footer />
+        </div>
+      )}
 
       {/* Onboarding modal */}
       {isOnboardingModalOpen && (
