@@ -2,14 +2,12 @@
  * App-shell layout route wrapping every screen: a full-viewport kraft column
  * with paper grain, holding the household gate — logged-out visitors get the
  * onboarding trigger, signed-in non-members get the waiting screen, members
- * get the app. Content aligns to a centered .page-col; the desktop AppHeader
- * (brand + nav pills) sits above everything, outside the scroll containers.
+ * get the app. Content aligns to a centered .page-col.
  */
 
 import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useLocalFirstAuth } from '../hooks/useLocalFirstAuth'
-import { AppHeader } from '../components/Chrome'
 
 function GateScreen({ children }: { children: React.ReactNode }) {
   return (
@@ -84,7 +82,6 @@ export function AppShell() {
 
   return (
     <div className="relative w-full h-dvh bg-kraft overflow-hidden flex flex-col paper-grain">
-      <AppHeader />
       {content}
     </div>
   )

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { TopBar } from '../components/Chrome'
+import { NavPills, TopBar } from '../components/Chrome'
 import { FilterChips } from '../components/FilterChips'
 import { TallyMarks } from '../components/TallyMarks'
 import { useReflections } from '../hooks/useAppData'
@@ -78,11 +78,6 @@ export function ReflectionsList() {
   const { reflections, error, loading } = useReflections()
   const [filter, setFilter] = useState<FilterKey>('all')
 
-  const monthLabel = useMemo(() => {
-    if (!reflections?.length) return ''
-    return new Date(reflections[0].cookedAt).toLocaleDateString('en-GB', { month: 'long' })
-  }, [reflections])
-
   const filtered = useMemo(() => {
     if (!reflections) return []
     if (filter === 'all') return reflections
@@ -94,7 +89,7 @@ export function ReflectionsList() {
     <section className="flex-1 flex flex-col">
       <TopBar
         left={<h1 className="h-display text-[clamp(34px,10vw,42px)]">Reflections</h1>}
-        right={<span className="eyebrow !text-[10px]">{monthLabel}</span>}
+        right={<NavPills />}
       />
       <div className="page-col px-5 pb-[108px]">
         <FilterChips options={FILTERS} active={filter} onChange={setFilter} className="pt-1.5" />

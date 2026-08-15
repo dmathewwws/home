@@ -26,7 +26,7 @@ This is a pnpm workspace monorepo with three packages:
 #### Client (`/client/`)
 
 - `/client/src/components/` - React components
-  - `Chrome.tsx` - App chrome: `AppHeader` (desktop brand + nav pills), `TopBar`, `TabBar` (mobile bottom tabs), `Fab`, `AddSheet`, `SaveBar`
+  - `Chrome.tsx` - App chrome: `NavPills` (desktop nav, rendered in the tab screens' `TopBar`), `TopBar`, `TabBar` (mobile bottom tabs), `Fab`, `AddSheet`, `SaveBar`
 - `/client/src/hooks/` - React hooks
   - `useLocalFirstAuth.tsx` - Authentication state management, exports `AuthProvider` and `useLocalFirstAuth()` hook
   - `useWebSockets.ts` - WebSocket connection hook for real-time updates
@@ -198,7 +198,7 @@ Defined inline in `/server/src/durable-object.ts` and `/server/src/index.ts`.
 ### Responsive Layout
 
 - **Mobile**: Full-bleed single column with a bottom tab bar
-- **Desktop (md, 768px+)**: Centered 660px content column (`.page-col`), tab bar replaced by nav pills in the `AppHeader` row
+- **Desktop (md, 768px+)**: Centered 660px content column (`.page-col`), tab bar replaced by `NavPills` beside the page title in `TopBar`
 
 ---
 

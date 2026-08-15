@@ -1,20 +1,17 @@
 /**
- * App chrome: app header, top bar, bottom tabs, FAB, add sheet, save bar.
+ * App chrome: top bar, nav pills, bottom tabs, FAB, add sheet, save bar.
  * The app shell is a single full-viewport h-dvh overflow-hidden flex column;
  * this chrome lives in normal flow / absolute within it (never fixed), and
  * bar backgrounds stay full-bleed while their contents align to .page-col.
- * Nav is duplicated, not morphed: TabBar (mobile, tab routes only) and the
- * AppHeader pills (desktop, every route) have different lifecycles.
+ * Nav is duplicated, not morphed: TabBar (mobile, tab routes only) and
+ * NavPills (desktop, in each tab screen's TopBar) have different lifecycles.
  */
 
 import { type ReactNode, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { useLocalFirstAuth } from '../hooks/useLocalFirstAuth'
 
-/** Desktop-only header: brand line left, nav pills right. Hidden on mobile. */
-export function AppHeader() {
-  const { user } = useLocalFirstAuth()
-  const showNav = !!user && (user.isMember || user.isAdmin)
+/** Desktop-only nav pills, rendered beside the page title in TopBar. */
+export function NavPills() {
   const pillClass = ({ isActive }: { isActive: boolean }) =>
     `font-mono2 text-[11px] tracking-[0.1em] uppercase px-3.5 py-1.5 ${
       isActive
@@ -23,23 +20,14 @@ export function AppHeader() {
     }`
 
   return (
-    <div className="hidden md:block">
-      <div className="page-col px-5 pt-5 pb-2 flex items-center justify-between">
-        <span className="font-display font-semibold text-[15px] tracking-[-0.01em]">
-          Recipe <span className="text-muted">Box</span>
-        </span>
-        {showNav && (
-          <nav className="flex items-center gap-1.5">
-            <NavLink to="/" end className={pillClass}>
-              Recipes
-            </NavLink>
-            <NavLink to="/reflections" className={pillClass}>
-              Reflections
-            </NavLink>
-          </nav>
-        )}
-      </div>
-    </div>
+    <nav className="hidden md:flex items-center gap-1.5">
+      <NavLink to="/" end className={pillClass}>
+        Recipes
+      </NavLink>
+      <NavLink to="/reflections" className={pillClass}>
+        Reflections
+      </NavLink>
+    </nav>
   )
 }
 
