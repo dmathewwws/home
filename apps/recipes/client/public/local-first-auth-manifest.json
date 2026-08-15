@@ -1,0 +1,9 @@
+{
+  "name": "Recipe Box",
+  "description": "The recipes this house actually cooks — broken into cards, with a journal of how each cook went",
+  "icon": "./icon.webp",
+  "type": "app",
+  "permissions": [
+    "profile"
+  ]
+}

@@ -15,6 +15,7 @@ export interface AdminUser {
   avatar?: string | null
   socials?: string | null
   isAdmin?: boolean
+  isMember?: boolean
   createdAt?: number | null
 }
 
@@ -64,6 +65,10 @@ export const adminApi = {
     call<void>(`/apps/${enc(slug)}/users/${enc(did)}/grant-admin`, { method: 'POST' }),
   revokeAdmin: (slug: string, did: string) =>
     call<void>(`/apps/${enc(slug)}/users/${enc(did)}/revoke-admin`, { method: 'POST' }),
+  grantMember: (slug: string, did: string) =>
+    call<void>(`/apps/${enc(slug)}/users/${enc(did)}/grant-member`, { method: 'POST' }),
+  revokeMember: (slug: string, did: string) =>
+    call<void>(`/apps/${enc(slug)}/users/${enc(did)}/revoke-member`, { method: 'POST' }),
   removeUser: (slug: string, did: string) =>
     call<void>(`/apps/${enc(slug)}/users/${enc(did)}`, { method: 'DELETE' }),
   blockUser: (slug: string, did: string) =>

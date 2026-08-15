@@ -1,0 +1,290 @@
+@import "tailwindcss";
+
+/* =============================================================================
+   Theme — Recipe Box kraft-paper system (butcher paper + Sharpie)
+   ============================================================================= */
+
+@theme {
+  /* Kraft paper base */
+  --color-kraft: #E0D0B0;
+  --color-kraft-deep: #CFBC96;
+  --color-kraft-lift: #EBDFC6;
+  --color-ink: #241F1A;
+  --color-muted: #6B5A44;
+  --color-rule: #B8A47C;
+  --color-tape: #D9C48F;
+
+  /* Accents: yolk yellow, gas-flame blue, sear red, herb olive */
+  --color-yolk: #E9A612;
+  --color-yolk-deep: #d1950e;
+  --color-flame: #2E5C8A;
+  --color-sear: #9C3B14;
+  --color-herb: #5C6B3C;
+
+  /* Page backdrop behind the phone frame */
+  --color-backdrop: #181511;
+
+  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-body: "Newsreader", Georgia, serif;
+  --font-mono2: "DM Mono", ui-monospace, monospace;
+
+  /* Legacy starter tokens (QR panel + onboarding modal still reference these) */
+  --color-primary: #241F1A;
+  --color-primary-hover: #3a332b;
+  --color-card: white;
+  --color-background: white;
+  --color-gradient-start: #E0D0B0;
+  --color-gradient-end: #CFBC96;
+  --color-qr-gradient-start: #EBDFC6;
+  --color-qr-gradient-end: #D9C48F;
+}
+
+body {
+  background: var(--color-backdrop);
+  font-family: var(--font-body);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2.5px solid var(--color-flame);
+  outline-offset: 3px;
+}
+
+/* =============================================================================
+   Component Patterns (ported from the approved mockup)
+   ============================================================================= */
+
+@layer components {
+  /* Legacy starter patterns (onboarding modal wrapper) */
+  .btn-primary {
+    @apply bg-primary text-white rounded-full shadow-lg
+           hover:bg-primary-hover transition-all hover:scale-105 font-semibold;
+  }
+  .card {
+    @apply bg-card rounded-lg shadow-lg;
+  }
+
+  /* Paper grain overlay — apply to the phone frame */
+  .paper-grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+    mix-blend-mode: multiply;
+    opacity: 0.2;
+  }
+
+  /* Small mono label, letterspaced uppercase */
+  .eyebrow {
+    font-family: var(--font-mono2);
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  /* Masking-tape section label */
+  .tape {
+    display: inline-block;
+    position: relative;
+    background: var(--color-tape);
+    padding: 5px 16px 6px;
+    font-family: var(--font-mono2);
+    font-size: 10.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    transform: rotate(-1.4deg);
+    clip-path: polygon(3px 0, 100% 2px, calc(100% - 4px) 100%, 0 calc(100% - 2px));
+    box-shadow: 0 1px 0 #0000001a;
+  }
+
+  /* Display type */
+  .h-display {
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: 0.98;
+    letter-spacing: -0.025em;
+  }
+
+  /* Filter chip */
+  .chip {
+    font-family: var(--font-mono2);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid var(--color-rule);
+    padding: 6px 11px;
+    white-space: nowrap;
+    color: var(--color-muted);
+  }
+  .chip[aria-pressed="true"] {
+    background: var(--color-ink);
+    color: var(--color-kraft);
+    border-color: var(--color-ink);
+  }
+
+  /* Ingredient chip, colour-coded by role */
+  .ing {
+    font-family: var(--font-mono2);
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+    padding: 4px 8px;
+    border: 1px solid var(--color-rule);
+    background: #00000008;
+    white-space: nowrap;
+  }
+  .ing-prot { border-color: var(--color-sear); background: #9C3B141a; }
+  .ing-arom { border-color: var(--color-flame); background: #2E5C8A1a; }
+  .ing-herb { border-color: var(--color-herb); background: #5C6B3C1f; }
+  .ing-pan  { border-color: #A87C0C; background: #E9A61230; }
+  .ing .amt { color: var(--color-muted); }
+  .ing-swap::after { content: " \21C4"; color: var(--color-muted); }
+  .ing-maybe { border-style: dashed; color: var(--color-muted); }
+  .ing-on::after { content: " \00D7"; color: var(--color-muted); margin-left: 2px; }
+  .ing-add { border-style: dashed; color: var(--color-muted); background: none; }
+
+  /* Source square on recipe rows: sear=video, flame=book, yolk=my notes */
+  .src {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    background: var(--color-sear);
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .src-book { background: var(--color-flame); }
+  .src-mine { background: var(--color-yolk); }
+
+  /* Mono metadata line under a recipe title */
+  .rec-meta {
+    font-family: var(--font-mono2);
+    font-size: 10.5px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    line-height: 1.65;
+  }
+
+  /* Meal tag */
+  .meal-tag {
+    font-family: var(--font-mono2);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    border: 1px solid var(--color-rule);
+    padding: 3px 8px;
+  }
+
+  /* "Cooked" reps label */
+  .reps {
+    font-family: var(--font-mono2);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  /* Dashed input surface (import strip, big fields, photo capture) */
+  .bigfield {
+    border: 1.5px dashed var(--color-rule);
+    background: var(--color-kraft-lift);
+    padding: 16px;
+  }
+
+  /* Card char counter — mono "112 / 140", sear when over */
+  .cc {
+    font-family: var(--font-mono2);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--color-muted);
+    display: flex;
+    align-items: center;
+  }
+  .cc-over { color: var(--color-sear); }
+
+  /* "Last time" note */
+  .note {
+    background: var(--color-kraft-lift);
+    border-left: 3px solid var(--color-sear);
+    padding: 13px 15px;
+    font-size: 14.5px;
+  }
+
+  /* Verdict badge */
+  .verdict {
+    font-family: var(--font-mono2);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 5px 9px;
+    border: 1px solid var(--color-ink);
+  }
+  .verdict-keep { background: var(--color-yolk); border-color: var(--color-yolk); }
+  .verdict-again { color: var(--color-sear); border-color: var(--color-sear); }
+
+  /* Big display-type text input ("Chutney sandwich") */
+  .write {
+    border: 0;
+    border-bottom: 2px solid var(--color-ink);
+    background: none;
+    width: 100%;
+    padding: 8px 0 10px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 26px;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+  .write::placeholder { color: var(--color-rule); }
+
+  /* Candy-stripe progress bar */
+  .stripe-bar {
+    background: repeating-linear-gradient(-45deg, var(--color-yolk) 0 5px, var(--color-yolk-deep) 5px 10px);
+  }
+
+  /* Savebar button */
+  .save-btn {
+    width: 100%;
+    background: var(--color-ink);
+    color: var(--color-kraft);
+    padding: 15px;
+    font-family: var(--font-mono2);
+    font-size: 11.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .save-btn:disabled { opacity: 0.45; }
+
+  /* Underlined mono link (source link, "Change") */
+  .mono-link {
+    font-family: var(--font-mono2);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-flame);
+    border-bottom: 1.5px solid var(--color-flame);
+    padding-bottom: 2px;
+    text-decoration: none;
+  }
+
+  /* Dashed add button ("+ One more card") */
+  .addcard {
+    width: 100%;
+    border: 1.5px dashed var(--color-rule);
+    padding: 14px;
+    font-family: var(--font-mono2);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  /* Hide scrollbars on horizontal filter rows */
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+}

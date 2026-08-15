@@ -126,6 +126,25 @@ export async function setUserAdmin(db: Database, did: string, isAdmin: boolean):
 }
 
 /**
+ * Set (or clear) a user's member flag.
+ *
+ * Same upsert-on-grant shape as setUserAdmin, so an operator can approve a pasted DID
+ * before its owner has ever opened the app. `is_member` is part of the shared starter
+ * schema (every managed child app has it — see docs/hosting-a-mini-app.md), so typed
+ * access is safe here, unlike `blocked` below.
+ */
+export async function setUserMember(db: Database, did: string, isMember: boolean): Promise<void> {
+  if (isMember) {
+    await db
+      .insert(users)
+      .values({ did, isMember: true })
+      .onConflictDoUpdate({ target: users.did, set: { isMember: true } })
+  } else {
+    await db.update(users).set({ isMember: false }).where(eq(users.did, did))
+  }
+}
+
+/**
  * Block (or unblock) a user.
  *
  * `blocked` is NOT part of the shared starter schema, so this runs as raw SQL rather

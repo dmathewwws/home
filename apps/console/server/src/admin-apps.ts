@@ -11,12 +11,15 @@
  * it and adds `dbForSlug`, which resolves a slug to its bound D1 on the host's `Env`.
  */
 import type { Env } from './types'
-import { MANAGED_APPS } from '@home/console-shared'
+import { HOST_APP_SLUG, MANAGED_APPS } from '@home/console-shared'
 
-export { MANAGED_APPS, type ManagedApp, type ChildBindingKey } from '@home/console-shared'
+export { HOST_APP_SLUG, MANAGED_APPS, type ManagedApp, type ChildBindingKey } from '@home/console-shared'
 
 /** Resolve a slug to its child D1 binding, or null if the slug isn't managed/bound. */
 export function dbForSlug(env: Env, slug: string): D1Database | null {
+  // The reserved host slug resolves to the console's own D1, so the admin UI can
+  // manage landing-grid membership/operators through the same routes.
+  if (slug === HOST_APP_SLUG) return env.DB
   const app = MANAGED_APPS.find((a) => a.slug === slug)
   if (!app) return null
   return env[app.bindingKey] ?? null

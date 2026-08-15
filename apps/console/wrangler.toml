@@ -19,12 +19,12 @@ database_id = "local"
 
 # Managed child app bindings go here — one block per app registered in
 # shared/src/apps.ts (MANAGED_APPS). The console sees its own empty local copy of
-# each child DB in dev, not the child's live data. Example:
-#
-# [[d1_databases]]
-# binding = "DB_<SLUG>"
-# database_name = "<workspace>-<slug>-mini-app-dev-db"
-# database_id = "<slug>-local"
+# each child DB in dev, not the child's live data.
+
+[[d1_databases]]
+binding = "DB_RECIPES"
+database_name = "home-recipes-mini-app-dev-db"
+database_id = "recipes-local"
 
 # Static assets (client build)
 # In dev: Vite serves the client at :5173 (this is unused).

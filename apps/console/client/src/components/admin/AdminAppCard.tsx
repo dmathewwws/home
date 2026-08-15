@@ -4,6 +4,7 @@
  * endpoint, 403) never breaks the others.
  */
 import { useCallback, useEffect, useState } from 'react'
+import { HOST_APP_SLUG } from '@home/console-shared'
 import type { MiniApp } from '../../apps'
 import { adminApi, type AdminResult, type AdminUser } from '../../lib/adminApi'
 
@@ -20,6 +21,8 @@ function shortDid(did: string): string {
 }
 
 export function AdminAppCard({ app }: { app: MiniApp }) {
+  // The host's own users table has no `blocked` column, so its card hides Block.
+  const isHostCard = app.slug === HOST_APP_SLUG
   const [status, setStatus] = useState<Status>('loading')
   const [error, setError] = useState('')
   const [users, setUsers] = useState<AdminUser[]>([])
@@ -109,6 +112,11 @@ export function AdminAppCard({ app }: { app: MiniApp }) {
                           admin
                         </span>
                       )}
+                      {u.isMember && !u.isAdmin && (
+                        <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                          member
+                        </span>
+                      )}
                     </p>
                     <p className="truncate font-mono text-xs text-gray-400" title={u.did}>
                       {shortDid(u.did)}
@@ -132,13 +140,32 @@ export function AdminAppCard({ app }: { app: MiniApp }) {
                         Make admin
                       </button>
                     )}
-                    <button
-                      disabled={busy === u.did}
-                      onClick={() => act(u.did, () => adminApi.blockUser(app.slug, u.did))}
-                      className="rounded-full px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-                    >
-                      Block
-                    </button>
+                    {u.isMember ? (
+                      <button
+                        disabled={busy === u.did}
+                        onClick={() => act(u.did, () => adminApi.revokeMember(app.slug, u.did))}
+                        className="rounded-full px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                      >
+                        Remove member
+                      </button>
+                    ) : (
+                      <button
+                        disabled={busy === u.did}
+                        onClick={() => act(u.did, () => adminApi.grantMember(app.slug, u.did))}
+                        className="rounded-full px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                      >
+                        Make member
+                      </button>
+                    )}
+                    {!isHostCard && (
+                      <button
+                        disabled={busy === u.did}
+                        onClick={() => act(u.did, () => adminApi.blockUser(app.slug, u.did))}
+                        className="rounded-full px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                      >
+                        Block
+                      </button>
+                    )}
                     <button
                       disabled={busy === u.did}
                       onClick={() => act(u.did, () => adminApi.removeUser(app.slug, u.did))}

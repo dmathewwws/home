@@ -27,6 +27,8 @@ export interface User {
   avatar?: string
   socials?: Array<{ platform: string; handle: string }>
   isAdmin: boolean
+  // Members-only gate: membership is granted from the host console's admin UI
+  isMember: boolean
 }
 
 interface AuthContextType {
@@ -39,6 +41,8 @@ interface AuthContextType {
   setResetMessage: (message: string | null) => void
   handleOnboardingComplete: () => void
   getProfileJwt: () => Promise<string | undefined>
+  /** Re-fetch the caller's user row (the waiting screen polls this to spot a membership grant). */
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -163,6 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setResetMessage,
     handleOnboardingComplete,
     getProfileJwt,
+    refreshUser: loadUser,
   }
 
   return (

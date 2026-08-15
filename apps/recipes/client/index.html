@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/webp" href="%BASE_URL%icon.webp" />
+    <link rel="local-first-auth-manifest" href="%BASE_URL%local-first-auth-manifest.json" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Recipe Box</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // Dynamically generate Smart App Banner with current page URL
+      (function() {
+        // Get current page URL
+        const currentUrl = window.location.href;
+
+        // URL-encode the current URL
+        const encodedUrl = encodeURIComponent(currentUrl);
+
+        // Create meta tag
+        const meta = document.createElement('meta');
+        meta.name = 'apple-itunes-app';
+        meta.content = `app-id=6753969350, app-argument=https://antlerbrowser.com/open/${encodedUrl}`;
+
+        // Add to head
+        document.head.appendChild(meta);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

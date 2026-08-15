@@ -13,6 +13,7 @@ import { Broadcaster } from './durable-object'
 import { createDb } from './db/client'
 import * as UserModel from './db/models/users'
 import { decodeAndVerifyJWT } from '@starter/shared'
+import { AuthError, authFromBody } from './auth'
 
 // The app is served under /<slug>/ on the shared domain; basePath keeps every
 // handler's route written as /api/* while matching /<slug>/api/* on the wire.
@@ -158,14 +159,20 @@ app.delete('/api/remove-user', async (c) => {
 })
 
 /**
- * GET /api/users - Get all users
+ * POST /api/users - Get all users (members only).
+ *
+ * The reference app-data endpoint: reads included, everything carrying app data
+ * is a POST with {profileJwt} in the body, gated by authFromBody. Copy this
+ * shape for new endpoints.
  */
-app.get('/api/users', async (c) => {
+app.post('/api/users', async (c) => {
   try {
-    const db = createDb(c.env.DB)
+    const body = await c.req.json()
+    const { db } = await authFromBody(c, body)
     const users = await UserModel.getAllUsers(db)
     return c.json({ users })
   } catch (error) {
+    if (error instanceof AuthError) return c.json({ error: error.message }, error.status)
     console.error('Error fetching users:', error)
     return c.json(
       { error: 'Failed to fetch users', message: (error as Error).message },

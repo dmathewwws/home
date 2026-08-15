@@ -8,8 +8,9 @@
  *
  * It also exposes an authed admin API (`/api/admin/*`) used by the Settings page to
  * manage users across the managed mini apps. The host holds its OWN D1 (operator
- * allowlist, gates the console) and binds each managed child app's D1 directly so it can
- * flip `users.is_admin` — see server/src/admin-apps.ts and docs/hosting-a-mini-app.md.
+ * allowlist gating the admin console, plus `is_member` gating the landing grid) and
+ * binds each managed child app's D1 directly so it can flip `users.is_admin` /
+ * `users.is_member` — see server/src/admin-apps.ts and docs/hosting-a-mini-app.md.
  */
 
 import { Hono } from 'hono'
@@ -81,6 +82,23 @@ app.post('/api/add-avatar', async (c) => {
   } catch (error) {
     console.error('Add avatar error:', error)
     return c.json({ error: 'Failed to add avatar', message: (error as Error).message }, 500)
+  }
+})
+
+/**
+ * GET /api/member/status - whether the caller may use the landing grid (`is_member`
+ * in the host D1; admins are implicitly members). Like /api/admin/status it never
+ * errors on a missing/invalid token; it just reports `isMember: false`.
+ */
+app.get('/api/member/status', async (c) => {
+  const jwt = c.req.header('Authorization')?.replace('Bearer ', '')
+  if (!jwt) return c.json({ isMember: false })
+  try {
+    const { iss } = await verifyJwt(c, jwt)
+    const user = await UserModel.getUserByDID(createDb(c.env.DB), iss)
+    return c.json({ isMember: !!user && (user.isMember || user.isAdmin) })
+  } catch {
+    return c.json({ isMember: false })
   }
 })
 
@@ -187,6 +205,22 @@ app.post(
   '/api/admin/apps/:slug/users/:did/revoke-admin',
   adminAction(async (db, c) => {
     await UserModel.setUserAdmin(db, requiredParam(c, 'did'), false)
+  })
+)
+
+/** POST /api/admin/apps/:slug/users/:did/grant-member - make a user a member of the app. */
+app.post(
+  '/api/admin/apps/:slug/users/:did/grant-member',
+  adminAction(async (db, c) => {
+    await UserModel.setUserMember(db, requiredParam(c, 'did'), true)
+  })
+)
+
+/** POST /api/admin/apps/:slug/users/:did/revoke-member - revoke a user's membership. */
+app.post(
+  '/api/admin/apps/:slug/users/:did/revoke-member',
+  adminAction(async (db, c) => {
+    await UserModel.setUserMember(db, requiredParam(c, 'did'), false)
   })
 )
 

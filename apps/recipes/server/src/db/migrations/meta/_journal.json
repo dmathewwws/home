@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1763761502785,
+      "tag": "0000_friendly_felicia_hardy",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1767474403346,
+      "tag": "0001_exotic_blizzard",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1784935208520,
+      "tag": "0002_rapid_nightshade",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1786676878468,
+      "tag": "0003_curvy_hellcat",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1786676894972,
+      "tag": "0004_seed-ingredient-staples",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1786769972013,
+      "tag": "0005_rename-is-verified-to-is-member",
+      "breakpoints": true
+    }
+  ]
+}

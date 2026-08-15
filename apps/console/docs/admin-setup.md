@@ -16,7 +16,13 @@ pnpm wrangler d1 execute home-prod-db --remote --command "UPDATE users SET is_ad
 ```
 
 Once a DID is a host operator, the Settings → Admin section appears for them and they can
-grant/revoke admin (and block/remove) users on each managed app.
+grant/revoke membership and admin (and block/remove) users on each managed app, plus on
+the host itself via the **Home (console)** card.
+
+Operators are implicitly members of the landing grid (`/` is members-only; `/settings`
+stays open so new users can create a profile). After the bootstrap SQL above, every
+later member approval happens in Settings → Admin: the new user creates a profile in
+Settings, then an operator taps **Make member** on the Home (console) card.
 
 ## Set a per-app admin directly (without the console)
 

@@ -5,15 +5,17 @@ Guidance for Claude Code when working on `apps/console`, the multi-app **host**.
 ## Project Overview
 
 This app is the catch-all Cloudflare Worker for the whole domain. It serves a **landing
-grid** of mini apps (`client/src/apps.ts`) at `/`, an SPA fallback for unclaimed paths,
-and an authed **admin console** (Settings → Admin). Each mini app is an independent
+grid** of mini apps (`client/src/apps.ts`) at `/` (members-only — see Authentication
+below; `/settings` stays open so visitors can create a profile), an SPA fallback for
+unclaimed paths, and an authed **admin console** (Settings → Admin). Each mini app is an independent
 Worker bound to `<domain>/<slug>/*` — the most-specific route wins, so child apps
 automatically override this catch-all for their own paths. The bare `/<slug>` path is
 not claimed; inbound links always use the trailing-slash form `/<slug>/`.
 
 Unlike the mini apps, the host has **no Durable Object and no WebSockets**. It does have
-its own D1 (the operator allowlist: `users.is_admin` gates the admin console) and binds
-each managed child app's D1 directly so operators can manage users across apps.
+its own D1 (`users.is_admin` gates the admin console, `users.is_member` gates the landing
+grid) and binds each managed child app's D1 directly so operators can manage users across
+apps (membership included).
 
 See [`docs/domain-setup.md`](./docs/domain-setup.md) (zone + proxied DNS + routes
 prerequisite) and [`docs/hosting-a-mini-app.md`](./docs/hosting-a-mini-app.md)
@@ -26,13 +28,15 @@ prerequisite) and [`docs/hosting-a-mini-app.md`](./docs/hosting-a-mini-app.md)
 - `src/apps.ts` — **the landing-grid registry.** One entry per card; `internal: true`
   entries (Settings) use client-side routing, the rest are real cross-document links to
   `/<slug>/`
-- `src/routes/home.tsx` — landing grid + "no mini apps yet" getting-started state
-- `src/routes/settings.tsx` — profile + the admin section
-- `src/components/admin/` — `AdminSection.tsx` (self-gating via `GET /api/admin/status`),
+- `src/routes/home.tsx` — landing grid, gated on membership (`getMemberStatus()`), plus
+  the members-only and "no mini apps yet" states
+- `src/routes/settings.tsx` — profile + the admin section (stays open to non-members)
+- `src/components/admin/` — `AdminSection.tsx` (self-gating via `GET /api/admin/status`;
+  prepends a synthetic "Home (console)" card for the host's own D1),
   `AdminAppCard.tsx` (per-app user management)
 - `src/lib/adminApi.ts` — typed client for the admin API
-- `src/hooks/useLocalFirstAuth.tsx` — auth state; exports `AuthProvider` and
-  `useLocalFirstAuth()`
+- `src/lib/memberApi.ts` — `getMemberStatus()`: restores `window.localFirstAuth` from the
+  stored profile and asks `GET /api/member/status` (the console has no auth context/hook)
 - `public/local-first-auth-manifest.json` — mini-app manifest (name, icon, permissions)
 
 ### Server (`server/`)
@@ -45,10 +49,11 @@ prerequisite) and [`docs/hosting-a-mini-app.md`](./docs/hosting-a-mini-app.md)
 
 ### Shared (`shared/`)
 
-- `src/apps.ts` — **`MANAGED_APPS` registry + `ChildBindingKey`**, the single source of
-  truth shared by `alchemy.run.ts` (binds each child D1 by UUID) and
-  `server/src/admin-apps.ts`. Currently empty (`ChildBindingKey = never`) — extend both
-  when registering an app
+- `src/apps.ts` — **`MANAGED_APPS` registry + `ChildBindingKey` + `HOST_APP_SLUG`**, the
+  single source of truth shared by `alchemy.run.ts` (binds each child D1 by UUID) and
+  `server/src/admin-apps.ts`. `HOST_APP_SLUG` (`'console'`) is a reserved slug the admin
+  API resolves to the host's own D1. Extend `MANAGED_APPS` + `ChildBindingKey` when
+  registering an app
 - `src/jwt.ts` — `decodeAndVerifyJWT` (EdDSA signature, expiry, allowed origin)
 
 ## Development Commands
@@ -70,6 +75,7 @@ pnpm db:generate-migrations  # regenerate migrations from schema changes
 | `GET` | `/api` | Health check | Public |
 | `POST` | `/api/add-user` | Upsert caller's profile (name + socials) | JWT |
 | `POST` | `/api/add-avatar` | Upsert caller's avatar | JWT |
+| `GET` | `/api/member/status` | May the caller use the landing grid? (never errors; `isMember: false`; admins implicitly members) | JWT (Bearer) |
 
 ### Admin (`/api/admin/*` — caller must be flagged `is_admin` in the host D1)
 
@@ -79,11 +85,15 @@ pnpm db:generate-migrations  # regenerate migrations from schema changes
 | `GET` | `/api/admin/apps/:slug/users` | List a managed app's users |
 | `POST` | `/api/admin/apps/:slug/users/:did/grant-admin` | Make a user an admin of that app |
 | `POST` | `/api/admin/apps/:slug/users/:did/revoke-admin` | Revoke a user's admin |
+| `POST` | `/api/admin/apps/:slug/users/:did/grant-member` | Make a user a member of that app |
+| `POST` | `/api/admin/apps/:slug/users/:did/revoke-member` | Revoke a user's membership |
 | `DELETE` | `/api/admin/apps/:slug/users/:did` | Remove a user from that app |
 | `POST` | `/api/admin/apps/:slug/users/:did/block` | Block a user (needs a `blocked` column in the child app) |
 
-Every admin endpoint independently re-verifies the caller server-side; the client-side
-gate is visibility only. Granting the first operator is a manual DB edit — see
+The reserved slug `console` (`HOST_APP_SLUG`) targets the host's own D1, so operators
+can manage landing-grid membership/operators from the same routes. Every admin endpoint
+independently re-verifies the caller server-side; the client-side gate is visibility
+only. Granting the first operator is a manual DB edit — see
 [`docs/admin-setup.md`](./docs/admin-setup.md).
 
 ## Registering a mini app with the host
@@ -122,13 +132,19 @@ browser injects `window.localFirstAuth`, identity is a `did:key`, and API calls 
 short-lived EdDSA JWTs verified by `shared/src/jwt.ts` against `ALLOWED_PRODUCTION_ORIGIN`
 (prod only — it's unset in dev, which skips the audience check).
 
-Auth states in the client (`useLocalFirstAuth()`):
+The console client has **no auth context/provider** — Settings uses `useOnboarding()`
+from `local-first-auth/react` directly, and the Home route asks
+`getMemberStatus()` (`client/src/lib/memberApi.ts`), which restores
+`window.localFirstAuth` from the stored profile and calls `GET /api/member/status`.
+
+Landing-grid states (`Home` in `client/src/routes/home.tsx`):
 
 | State | Condition | Show |
 |---|---|---|
-| Loading | `loading === true` | Spinner |
-| Logged out | `user === null` | Onboarding trigger (`setIsOnboardingModalOpen(true)`) |
-| Logged in | `user !== null` | User content |
+| Resolving | status still `null` | Subtle loading text |
+| Signed out | `'signed-out'` | Members-only card → "create your profile in Settings" |
+| Not a member | `'not-member'` | Members-only card → "ask an admin to make you a member" |
+| Member | `'member'` (or admin) | The grid |
 
 ## Deployment
 

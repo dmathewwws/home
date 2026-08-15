@@ -199,10 +199,10 @@ cd apps/console && pnpm run deploy:cloudflare
 ## Admin console requirements for the child app
 
 The host's Settings → Admin section lets an operator manage users across **every**
-managed mini app (grant/revoke admin, block, remove). Rather than each app exposing an
-HTTP admin surface, the **host Worker binds each app's D1 database directly** (by UUID,
-via `MANAGED_APPS`) and writes `users.is_admin` itself. This is simpler to operate at
-the cost of one hard requirement:
+managed mini app (grant/revoke membership and admin, block, remove). Rather than each
+app exposing an HTTP admin surface, the **host Worker binds each app's D1 database
+directly** (by UUID, via `MANAGED_APPS`) and writes `users.is_admin` / `users.is_member`
+itself. This is simpler to operate at the cost of one hard requirement:
 
 > **All apps must live in the same pinned Cloudflare account** (`CLOUDFLARE_ACCOUNT_ID`,
 > see [`docs/domain-setup.md`](./domain-setup.md) §3). D1 bindings are account-scoped, so a
@@ -210,8 +210,12 @@ the cost of one hard requirement:
 
 What this means for a child app:
 
-- **Keep the standard `users` table** with a `did` primary key and an `is_admin` column
-  (the template schema has this). Grant/revoke/remove/list need no change.
+- **Keep the standard `users` table** with a `did` primary key and `is_admin` +
+  `is_member` columns (the template schema has both). `is_member` is a **hard**
+  requirement like `is_admin`: the console's user list selects it through its typed
+  schema, so an app missing the column breaks its whole user list, not just one
+  action. Apps are members-only by default — the console's grant/revoke-member
+  actions are how users get let in.
 - **Block needs a `blocked` column.** Template-scaffolded apps ship it. An external app
   that lacks it will see the console's "Block" action return an error (the other
   actions still work).

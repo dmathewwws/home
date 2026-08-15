@@ -8,9 +8,14 @@
  * provisions or migrates them. Each child app owns and migrates its own D1. `databaseId`
  * is the sync point: if a child app ever replaces its DB (new UUID), update it here.
  */
-// No managed apps yet. When registering your first app, replace `never` with a
-// union of binding keys, e.g.: export type ChildBindingKey = 'DB_CHECK_IN'
-export type ChildBindingKey = never
+/**
+ * Reserved slug for the host's own D1, so the admin UI can manage console
+ * membership/operators through the same per-app card + routes. No MANAGED_APPS
+ * entry may use this slug.
+ */
+export const HOST_APP_SLUG = 'console'
+
+export type ChildBindingKey = 'DB_RECIPES'
 
 export interface ManagedApp {
   /** URL slug, matches an entry in client/src/apps.ts. */
@@ -24,12 +29,12 @@ export interface ManagedApp {
 }
 
 export const MANAGED_APPS: ManagedApp[] = [
-  // Example entry — add one per deployed child app (with its real D1 UUID) and add its
-  // bindingKey to ChildBindingKey above:
-  // {
-  //   slug: 'check-in',
-  //   bindingKey: 'DB_CHECK_IN',
-  //   dbName: '<workspace>-check-in-mini-app-prod-db',
-  //   databaseId: '<uuid from `pnpm wrangler d1 list`>',
-  // },
+  {
+    slug: 'recipes',
+    bindingKey: 'DB_RECIPES',
+    dbName: 'home-recipes-mini-app-prod-db',
+    // TODO: replace with the real prod D1 UUID (`cd apps/recipes && pnpm exec wrangler d1 list`)
+    // before deploying the console — a placeholder UUID fails the binding.
+    databaseId: 'TODO-real-prod-d1-uuid',
+  },
 ]

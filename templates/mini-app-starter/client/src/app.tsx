@@ -1,11 +1,39 @@
+import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Onboarding } from 'local-first-auth/react'
 import { AuthProvider, useLocalFirstAuth } from './hooks/useLocalFirstAuth'
 import { QRCodePanel } from './components/QRCodePanel'
 import { Footer } from './components/Footer'
 
+/**
+ * Members-only waiting screen. Membership is granted from the host console (it
+ * writes our D1 directly, so no WebSocket fires) — poll until the grant shows up.
+ */
+function WaitingForMembership() {
+  const { user, refreshUser } = useLocalFirstAuth()
+
+  useEffect(() => {
+    const interval = setInterval(refreshUser, 30_000)
+    return () => clearInterval(interval)
+  }, [refreshUser])
+
+  return (
+    <div className="flex items-center justify-center px-4">
+      <div className="text-center max-w-md">
+        <div className="text-6xl mb-6">🔒</div>
+        <h1 className="text-3xl font-bold mb-4 text-gray-800">Members only</h1>
+        <p className="text-gray-600">
+          {user?.name ? `${user.name}, ask` : 'Ask'} an admin to approve you in the
+          host console — this page checks again every half minute, no refresh needed.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 function Layout() {
   const {
+    user,
     loading,
     error,
     isOnboardingModalOpen,
@@ -47,17 +75,25 @@ function Layout() {
     )
   }
 
+  // Members-only gate: signed-in non-members wait here (signed-out visitors keep
+  // the normal onboarding flow inside the routes).
+  const isWaiting = user && !user.isMember && !user.isAdmin
+
   // Main layout with routes
   return (
     <div className="min-h-screen bg-gradient-to-br from-gradient-start to-gradient-end">
       <div className="grid md:grid-cols-2 min-h-screen">
         <QRCodePanel />
-        <div className="flex flex-col px-4 py-8">
-          <main>
-            <Outlet />
-          </main>
-          <Footer />
-        </div>
+        {isWaiting ? (
+          <WaitingForMembership />
+        ) : (
+          <div className="flex flex-col px-4 py-8">
+            <main>
+              <Outlet />
+            </main>
+            <Footer />
+          </div>
+        )}
       </div>
 
       {/* Onboarding modal */}

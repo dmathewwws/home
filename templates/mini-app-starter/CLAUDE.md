@@ -47,6 +47,7 @@ This is a pnpm workspace monorepo with three packages:
 #### Server (`/server/`)
 
 - `/server/src/index.ts` - Cloudflare Workers entry point with Hono router, API endpoints, and WebSocket handling
+- `/server/src/auth.ts` - Request auth (`AuthError`, `requireMember`, `authFromBody`): app-data endpoints require a member (`users.is_member`, or admin), granted from the host console
 - `/server/src/durable-object.ts` - Durable Object class for real-time WebSocket connections (WebSocket message types defined inline)
 - `/server/src/db/client.ts` - Database client factory for Cloudflare D1
 - `/server/src/db/schema.ts` - Database schema (used by Drizzle Kit to generate migrations)
@@ -134,7 +135,8 @@ pnpm dev              # Start dev server without simulator
 |-------|-----------|--------------|
 | Loading | `loading === true` | Loading spinner |
 | Logged Out | `user === null` | Onboarding trigger |
-| Logged In | `user !== null` | User content |
+| Waiting | `user && !user.isMember && !user.isAdmin` | Members-only waiting screen (handled by `Layout` in `app.tsx`; polls `refreshUser` every ~30s) |
+| Member | `user.isMember \|\| user.isAdmin` | User content |
 
 **Pattern:**
 
@@ -202,12 +204,18 @@ Defined inline in `/server/src/durable-object.ts` and `/server/src/index.ts`.
 
 ### REST Endpoints
 
+**Auth model:** the app is members-only. App-data endpoints — reads included —
+are POSTs carrying `{profileJwt}` in the body and require a **member**
+(`users.is_member`, or admin; checked by `server/src/auth.ts`). Membership is
+granted from the host console's admin UI (see `docs/admin-setup.md`). Profile
+endpoints stay open so a visitor can sign in and wait to be let in.
+
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
-| `POST` | `/api/add-user` | Add or update user profile | JWT required |
-| `POST` | `/api/add-avatar` | Add or update user avatar | JWT required |
-| `DELETE` | `/api/remove-user` | Remove user | JWT required |
-| `GET` | `/api/users` | Get all users from database | Public |
+| `POST` | `/api/add-user` | Add or update user profile | JWT (any) |
+| `POST` | `/api/add-avatar` | Add or update user avatar | JWT (any) |
+| `DELETE` | `/api/remove-user` | Remove user | JWT (any) |
+| `POST` | `/api/users` | Get all users from database | Member |
 | `GET` | `/api` | Health check | Public |
 
 ### WebSocket Endpoint

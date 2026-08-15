@@ -1,0 +1,60 @@
+# This is used in development only (Alchemy is used for production deployments).
+# home-recipes-mini-app and recipes are replaced with real values by `pnpm new-app`.
+
+name = "home-recipes-mini-app-dev"
+main = "server/src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "home-recipes-mini-app-dev-db"
+database_id = "local"
+
+# Durable Object binding
+[[durable_objects.bindings]]
+name = "DURABLE_OBJECT"
+class_name = "Broadcaster"
+script_name = "home-recipes-mini-app-dev"
+
+# Durable Object migration
+[[migrations]]
+tag = "v1"
+new_classes = ["Broadcaster"]
+
+# Static assets (client build). In dev Vite serves the client at :5173, but the
+# binding must exist because the worker's fetch handler references env.ASSETS.
+# run_worker_first mirrors production (alchemy.run.ts).
+[assets]
+directory = "./client/dist"
+binding = "ASSETS"
+html_handling = "auto-trailing-slash"
+not_found_handling = "single-page-application"
+run_worker_first = true
+
+# R2 bucket for reflection photos. wrangler dev --local simulates it on disk.
+[[r2_buckets]]
+binding = "PHOTOS_BUCKET"
+bucket_name = "home-recipes-mini-app-dev-photos"
+
+# Secrets required by the Worker.
+# In local dev, wrangler dev loads ONLY these keys from `.env` into c.env,
+# keeping deploy creds (ALCHEMY_STATE_TOKEN etc.) out of the app runtime.
+# Missing keys log a warning; dev stays runnable. NEVER create a .dev.vars
+# file — its presence makes wrangler dev ignore .env entirely.
+# The R2_* presign values are deliberately NOT listed: absent in dev, they
+# flip photo uploads onto the worker's /api/dev-upload fallback route.
+[secrets]
+required = ["OPENAI_API_KEY"]
+
+# ALLOWED_PRODUCTION_ORIGIN is the prod origin only — set it in alchemy.run.ts, and
+# leave it unset here so the JWT audience check is skipped in dev. Each scaffolded app
+# gets its own port pair (5174/8788, 5175/8789, …), which a hardcoded localhost value
+# wouldn't match. Uncomment below only to pin the check to one local port on purpose.
+[vars]
+# ALLOWED_PRODUCTION_ORIGIN = "http://localhost:5173"
+
+# Dev server configuration
+[dev]
+port = 8788

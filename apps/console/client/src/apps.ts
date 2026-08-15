@@ -36,6 +36,14 @@ export interface MiniApp {
 
 export const apps: MiniApp[] = [
   {
+    slug: 'recipes',
+    name: 'Recipe Box',
+    description: 'Recipes to try out.',
+    path: '/recipes/',
+    icon: '🍳',
+    accent: 'from-amber-400 to-orange-300',
+  },
+  {
     slug: 'settings',
     name: 'Settings',
     description: 'Create or edit your profile.',
