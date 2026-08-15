@@ -34,5 +34,5 @@ export interface Env {
   // Dev: plain string from `.env` via [secrets] required in wrangler.toml.
   // Prod: Worker secret bound via alchemy.secret.env in alchemy.run.ts.
   // When unset, /api/parse-video returns 503 and manual entry still works.
-  OPENAI_API_KEY?: string
+  // OPENAI_API_KEY?: string
 }

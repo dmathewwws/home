@@ -99,7 +99,7 @@ export const worker = await Worker('worker', {
     // Video-import parser (transcript → cards). Required for deploy — set
     // OPENAI_API_KEY in .env (and ALCHEMY_PASSWORD, which encrypts secrets
     // in Alchemy state).
-    OPENAI_API_KEY: alchemy.secret.env.OPENAI_API_KEY,
+    // OPENAI_API_KEY: alchemy.secret.env.OPENAI_API_KEY,
     // Presign config — bound only when the R2 API creds are in .env.
     ...(hasR2Creds
       ? {

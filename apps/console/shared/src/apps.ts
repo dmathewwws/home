@@ -33,8 +33,6 @@ export const MANAGED_APPS: ManagedApp[] = [
     slug: 'recipes',
     bindingKey: 'DB_RECIPES',
     dbName: 'home-recipes-mini-app-prod-db',
-    // TODO: replace with the real prod D1 UUID (`cd apps/recipes && pnpm exec wrangler d1 list`)
-    // before deploying the console — a placeholder UUID fails the binding.
-    databaseId: 'TODO-real-prod-d1-uuid',
+    databaseId: '0536c6b8-3f42-4c11-a0af-a26be54e5413',
   },
 ]

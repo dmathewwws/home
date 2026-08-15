@@ -10,9 +10,9 @@
  *
  * Path-based routes only work on a Cloudflare zone (a custom domain), NOT on
  * *.workers.dev. This script always deploys to a workers.dev URL via `url: true`, and
- * additionally attaches the `<domain>/*` catch-all route automatically once
- * ALLOWED_PRODUCTION_ORIGIN below is your real domain — the zone + a proxied DNS
- * record must already exist (see docs/domain-setup.md §1-2).
+ * additionally attaches the domain as a Custom Domain (DNS record + cert created
+ * automatically) once ALLOWED_PRODUCTION_ORIGIN below is your real domain — the
+ * zone must already exist (see docs/domain-setup.md §1-2).
  */
 
 import alchemy from 'alchemy'
@@ -26,7 +26,7 @@ import { MANAGED_APPS } from '@home/console-shared'
 // local deploy would push a localhost origin to prod). Set at setup time by
 // `pnpm setup-project --allowed-production-origin`; to change it later, edit this
 // literal (in each app and the template). While it is still the placeholder, no
-// routes are attached — the Worker only gets its workers.dev URL. See docs/secrets.md.
+// domain is attached — the Worker only gets its workers.dev URL. See docs/secrets.md.
 const ALLOWED_PRODUCTION_ORIGIN = 'https://home.dmathewwws.com'
 const hasRealOrigin = !ALLOWED_PRODUCTION_ORIGIN.includes('your-domain.example')
 
@@ -78,7 +78,7 @@ const managedDbBindings = Object.fromEntries(
 
 /**
  * Catch-all host Worker. Always deploys to a workers.dev URL (a first smoke test);
- * the custom-domain route attaches automatically below once ALLOWED_PRODUCTION_ORIGIN
+ * the Custom Domain attaches automatically below once ALLOWED_PRODUCTION_ORIGIN
  * is your real domain. See docs/domain-setup.md.
  */
 export const worker = await Worker('worker', {
@@ -95,12 +95,14 @@ export const worker = await Worker('worker', {
     html_handling: 'auto-trailing-slash',
     not_found_handling: 'single-page-application',
   },
-  // Claim `<domain>/*` — the catch-all. Child mini apps bind more-specific
-  // `/<slug>/*` routes that win over this. Activates automatically once
-  // ALLOWED_PRODUCTION_ORIGIN is your real domain (the zone + a proxied DNS record
-  // must already exist — see docs/domain-setup.md §1-2).
+  // Attach the domain as a Custom Domain — Cloudflare creates the DNS record and
+  // TLS cert automatically (unlike a Worker Route, which needs a pre-existing
+  // proxied DNS record). The Custom Domain is the catch-all: child mini apps bind
+  // `/<slug>/*` routes on the same hostname, and routes take precedence over a
+  // Custom Domain. Activates automatically once ALLOWED_PRODUCTION_ORIGIN is your
+  // real domain (the zone must already exist — see docs/domain-setup.md §1-2).
   ...(hasRealOrigin
-    ? { routes: [`${new URL(ALLOWED_PRODUCTION_ORIGIN).host}/*`] }
+    ? { domains: [new URL(ALLOWED_PRODUCTION_ORIGIN).host] }
     : {}),
   url: true,
 })
