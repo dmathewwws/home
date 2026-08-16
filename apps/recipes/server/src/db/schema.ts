@@ -20,7 +20,7 @@ export const users = sqliteTable('users', {
   index('idx_users_created_at').on(table.createdAt),
 ])
 
-export const MEALS = ['main', 'snack', 'sauce', 'salad', 'dessert'] as const
+export const MEALS = ['main', 'snack', 'sauce', 'salad', 'sandwich', 'dessert'] as const
 export type Meal = (typeof MEALS)[number]
 
 export const SOURCE_TYPES = ['video', 'book', 'notes'] as const
@@ -44,6 +44,13 @@ export interface RecipeSwap {
   replacement: string
 }
 
+/** A secondary source: another take on the dish (a pro chef's video, an article) with its tips. */
+export interface RecipeSecondarySource {
+  url: string
+  label: string // who/what it is: "Kenji López-Alt", "Serious Eats"
+  notes: string[] // the tips worth keeping from this source
+}
+
 export const recipes = sqliteTable('recipes', {
   id: text('id').notNull().primaryKey(), // crypto.randomUUID()
   title: text('title').notNull(),
@@ -58,6 +65,7 @@ export const recipes = sqliteTable('recipes', {
   // order, so they live as JSON rather than extra tables.
   cards: text('cards').notNull(), // JSON RecipeCard[]
   swaps: text('swaps').notNull().default('[]'), // JSON RecipeSwap[]
+  secondarySources: text('secondary_sources').notNull().default('[]'), // JSON RecipeSecondarySource[]
   createdBy: text('created_by').notNull(), // author DID (verified JWT iss)
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),

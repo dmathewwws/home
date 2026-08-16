@@ -136,7 +136,7 @@ Give the app a unique `name` in `client/public/local-first-auth-manifest.json`
 
 ## Part B — Register with the host console
 
-Do this after the app's **first deploy** (you need its real prod D1 UUID). Four edits,
+Do this after the app's **first deploy** (you need its real prod D1 UUID). Three edits,
 all in `apps/console`, then redeploy the host:
 
 ### 1. Get the app's prod D1 UUID
@@ -146,20 +146,12 @@ cd apps/guestbook && pnpm exec wrangler d1 list
 # note the uuid of <workspace>-guestbook-mini-app-prod-db
 ```
 
-### 2. Landing-grid card — `client/src/apps.ts`
+### 2. Managed-app registry — `shared/src/apps.ts`
 
-```ts
-{ slug: 'guestbook', name: 'Guestbook', description: '…', path: '/guestbook/', icon: '📖', accent: 'from-rose-400 to-orange-300' }
-```
-
-`path` MUST be `/<slug>/` **with the trailing slash** — it's a real cross-document link,
-and the child Worker only claims `/<slug>/*`; the bare `/<slug>` URL falls to the host's
-catch-all and won't render the app.
-
-### 3. Managed-app registry — `shared/src/apps.ts` (required, not optional)
-
-Add the entry to `MANAGED_APPS` **and** extend `ChildBindingKey` — leaving the type as
-`never` while adding an entry is a compile error:
+The single registry: it drives the D1 binding (`alchemy.run.ts`,
+`server/src/admin-apps.ts`) **and** the landing-grid card (name, description, icon,
+accent). Add the entry to `MANAGED_APPS` **and** extend `ChildBindingKey` — leaving the
+type as `never` while adding an entry is a compile error:
 
 ```ts
 export type ChildBindingKey = 'DB_GUESTBOOK'
@@ -167,6 +159,10 @@ export type ChildBindingKey = 'DB_GUESTBOOK'
 export const MANAGED_APPS: ManagedApp[] = [
   {
     slug: 'guestbook',
+    name: 'Guestbook',
+    description: 'Sign the guestbook.',
+    icon: '📖',
+    accent: 'from-rose-400 to-orange-300',
     bindingKey: 'DB_GUESTBOOK',
     dbName: '<workspace>-guestbook-mini-app-prod-db',
     databaseId: '<uuid from step 1>',
@@ -174,10 +170,13 @@ export const MANAGED_APPS: ManagedApp[] = [
 ]
 ```
 
-`alchemy.run.ts` and `server/src/admin-apps.ts` both derive from this registry — the
-UUID is the only sync point; nothing else is edited by hand.
+The UUID is the only sync point; nothing else is edited by hand. The card links to
+`/<slug>/` (derived, trailing slash — the child Worker only claims `/<slug>/*`). Which
+users actually see the card is decided per request by `GET /api/my-apps`: members of the
+app (a `users` row with `is_member` or `is_admin`, not `blocked`) plus host admins, who
+see every registered app.
 
-### 4. Dev D1 binding — `wrangler.toml`
+### 3. Dev D1 binding — `wrangler.toml`
 
 ```toml
 [[d1_databases]]
@@ -190,7 +189,7 @@ Under `wrangler dev --local` the `database_id` is just a local storage key — a
 string works; the console gets its own empty local copy of the child DB, not the
 child's live dev data.
 
-### 5. Redeploy the host
+### 4. Redeploy the host
 
 ```bash
 cd apps/console && pnpm run deploy:cloudflare
@@ -215,10 +214,12 @@ What this means for a child app:
   requirement like `is_admin`: the console's user list selects it through its typed
   schema, so an app missing the column breaks its whole user list, not just one
   action. Apps are members-only by default — the console's grant/revoke-member
-  actions are how users get let in.
+  actions are how users get let in, and the same membership decides whether the
+  app's card appears on that user's landing grid (`GET /api/my-apps`).
 - **Block needs a `blocked` column.** Template-scaffolded apps ship it. An external app
   that lacks it will see the console's "Block" action return an error (the other
-  actions still work).
+  actions still work; the landing-grid membership check reads `blocked` with raw SQL
+  and falls back gracefully when the column is absent).
 
 Authorization lives entirely on the host: it verifies the operator's JWT with
 `decodeAndVerifyJWT` and checks the issuer DID against its own `is_admin` allowlist.

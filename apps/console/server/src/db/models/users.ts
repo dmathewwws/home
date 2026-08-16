@@ -157,6 +157,32 @@ export async function setUserBlocked(db: Database, did: string, blocked: boolean
 }
 
 /**
+ * May this DID use the app right now? Row exists, not blocked, and member or admin —
+ * the same test child apps apply in their own `requireMember`.
+ *
+ * Takes a raw D1 handle because it runs against child databases whose schemas only
+ * guarantee the shared starter columns: `blocked` is optional (like setUserBlocked
+ * above), so a typed select would break against a child table without it. The
+ * fallback query retries without `blocked` for those apps.
+ */
+export async function isActiveMember(d1: D1Database, did: string): Promise<boolean> {
+  type Row = { is_member: number; is_admin: number; blocked?: number }
+  try {
+    const row = await d1
+      .prepare('SELECT is_member, is_admin, blocked FROM users WHERE did = ?')
+      .bind(did)
+      .first<Row>()
+    return !!row && !row.blocked && (!!row.is_member || !!row.is_admin)
+  } catch {
+    const row = await d1
+      .prepare('SELECT is_member, is_admin FROM users WHERE did = ?')
+      .bind(did)
+      .first<Row>()
+    return !!row && (!!row.is_member || !!row.is_admin)
+  }
+}
+
+/**
  * Delete all non-admin users (for resetting events)
  */
 export async function deleteNonAdminUsers(db: Database): Promise<void> {

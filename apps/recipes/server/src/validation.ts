@@ -12,6 +12,7 @@ import {
   VERDICTS,
   type RecipeCard,
   type RecipeSwap,
+  type RecipeSecondarySource,
 } from './db/schema'
 import type { RecipeInput, RecipeIngredientInput } from './db/models/recipes'
 import type { ReflectionInput } from './db/models/reflections'
@@ -22,6 +23,8 @@ const TEXT_MAX = 2000
 const MAX_CARDS = 24
 const MAX_INGREDIENTS = 40
 const MAX_SWAPS = 12
+const MAX_SECONDARY_SOURCES = 6
+const MAX_SOURCE_NOTES = 8
 
 export class ValidationError extends Error {}
 
@@ -100,6 +103,26 @@ export function validateRecipeInput(raw: unknown): RecipeInput {
     return { ingredient: swap.ingredient.trim().slice(0, 80), replacement: swap.replacement.trim().slice(0, 200) }
   })
 
+  const secondaryRaw = raw.secondarySources ?? []
+  if (!Array.isArray(secondaryRaw)) fail('secondarySources must be an array')
+  if (secondaryRaw.length > MAX_SECONDARY_SOURCES) fail(`Too many secondary sources (max ${MAX_SECONDARY_SOURCES})`)
+  const secondarySources: RecipeSecondarySource[] = secondaryRaw.map((source, i) => {
+    if (!isRecord(source) || typeof source.url !== 'string' || !source.url.trim()) {
+      fail(`Secondary source ${i + 1} needs a link`)
+    }
+    if (typeof source.label !== 'string' || !source.label.trim()) {
+      fail(`Secondary source ${i + 1} needs a label (who it's from)`)
+    }
+    const notesRaw = source.notes ?? []
+    if (!Array.isArray(notesRaw)) fail(`Secondary source ${i + 1} notes must be an array`)
+    if (notesRaw.length > MAX_SOURCE_NOTES) fail(`Secondary source ${i + 1} has too many notes (max ${MAX_SOURCE_NOTES})`)
+    const notes = notesRaw.map((note, j) => {
+      if (typeof note !== 'string' || !note.trim()) fail(`Secondary source ${i + 1} note ${j + 1} needs text`)
+      return note.trim().slice(0, 200)
+    })
+    return { url: source.url.trim().slice(0, 500), label: source.label.trim().slice(0, 200), notes }
+  })
+
   return {
     title: (raw.title as string).trim(),
     meal: raw.meal as RecipeInput['meal'],
@@ -112,6 +135,7 @@ export function validateRecipeInput(raw: unknown): RecipeInput {
     ingredients: ingredientInputs,
     cards,
     swaps,
+    secondarySources,
   }
 }
 

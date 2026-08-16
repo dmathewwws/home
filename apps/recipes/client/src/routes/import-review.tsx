@@ -82,6 +82,7 @@ export function ImportReview() {
           .map((i) => ({ name: i.name, role: i.role, amount: i.amount ?? null })),
         cards: filled.map((c) => ({ text: c.text.trim(), ...(c.timer?.trim() ? { timer: c.timer.trim() } : {}) })),
         swaps: result.swaps,
+        secondarySources: [],
       })
       navigate(`/recipe/${recipe.id}`, { replace: true })
     } catch (err) {

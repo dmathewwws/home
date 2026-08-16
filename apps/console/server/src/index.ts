@@ -8,9 +8,10 @@
  *
  * It also exposes an authed admin API (`/api/admin/*`) used by the Settings page to
  * manage users across the managed mini apps. The host holds its OWN D1 (operator
- * allowlist gating the admin console, plus `is_member` gating the landing grid) and
- * binds each managed child app's D1 directly so it can flip `users.is_admin` /
- * `users.is_member` — see server/src/admin-apps.ts and docs/hosting-a-mini-app.md.
+ * allowlist gating the admin console) and binds each managed child app's D1 directly,
+ * both to flip `users.is_admin` / `users.is_member` from the admin console and to
+ * answer GET /api/my-apps (which apps the landing grid shows a given caller) — see
+ * server/src/admin-apps.ts and docs/hosting-a-mini-app.md.
  */
 
 import { Hono } from 'hono'
@@ -20,7 +21,7 @@ import type { Env } from './types'
 import { createDb, type Database } from './db/client'
 import * as UserModel from './db/models/users'
 import { dbForSlug } from './admin-apps'
-import { decodeAndVerifyJWT } from '@home/console-shared'
+import { decodeAndVerifyJWT, MANAGED_APPS } from '@home/console-shared'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -86,9 +87,10 @@ app.post('/api/add-avatar', async (c) => {
 })
 
 /**
- * GET /api/member/status - whether the caller may use the landing grid (`is_member`
- * in the host D1; admins are implicitly members). Like /api/admin/status it never
- * errors on a missing/invalid token; it just reports `isMember: false`.
+ * GET /api/member/status - whether the caller is a member of the HOST itself
+ * (`is_member` in the host D1; admins are implicitly members). The landing grid is
+ * gated by /api/my-apps below, not this. Like /api/admin/status it never errors on a
+ * missing/invalid token; it just reports `isMember: false`.
  */
 app.get('/api/member/status', async (c) => {
   const jwt = c.req.header('Authorization')?.replace('Bearer ', '')
@@ -99,6 +101,40 @@ app.get('/api/member/status', async (c) => {
     return c.json({ isMember: !!user && (user.isMember || user.isAdmin) })
   } catch {
     return c.json({ isMember: false })
+  }
+})
+
+/**
+ * GET /api/my-apps - which managed apps the caller may see on the landing grid.
+ * Host admins see every registered app (no child queries); everyone else gets the
+ * apps whose child D1 has them as an active member (member or admin, not blocked —
+ * the same test the child apps apply themselves). Like /api/member/status it never
+ * errors on a missing/invalid token; it just reports an empty list.
+ */
+app.get('/api/my-apps', async (c) => {
+  const jwt = c.req.header('Authorization')?.replace('Bearer ', '')
+  if (!jwt) return c.json({ isAdmin: false, apps: [] })
+  try {
+    const { iss } = await verifyJwt(c, jwt)
+    if (await isHostAdmin(c.env, iss)) {
+      return c.json({ isAdmin: true, apps: MANAGED_APPS.map((a) => a.slug) })
+    }
+    const memberships = await Promise.all(
+      MANAGED_APPS.map(async (app) => {
+        // Per-app try/catch: a missing dev binding or unreachable child DB drops
+        // that one card, never the whole endpoint.
+        try {
+          const d1 = c.env[app.bindingKey]
+          if (!d1) return null
+          return (await UserModel.isActiveMember(d1, iss)) ? app.slug : null
+        } catch {
+          return null
+        }
+      })
+    )
+    return c.json({ isAdmin: false, apps: memberships.filter((slug) => slug !== null) })
+  } catch {
+    return c.json({ isAdmin: false, apps: [] })
   }
 })
 

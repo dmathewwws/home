@@ -5,17 +5,20 @@ Guidance for Claude Code when working on `apps/console`, the multi-app **host**.
 ## Project Overview
 
 This app is the catch-all Cloudflare Worker for the whole domain. It serves a **landing
-grid** of mini apps (`client/src/apps.ts`) at `/` (members-only — see Authentication
-below; `/settings` stays open so visitors can create a profile), an SPA fallback for
-unclaimed paths, and an authed **admin console** (Settings → Admin). Each mini app is an independent
-Worker bound to `<domain>/<slug>/*` — the most-specific route wins, so child apps
-automatically override this catch-all for their own paths. The bare `/<slug>` path is
-not claimed; inbound links always use the trailing-slash form `/<slug>/`.
+grid** of mini apps at `/`, filtered per user: the grid shows the apps the caller is a
+member of (`GET /api/my-apps` checks each child app's D1; host admins see every
+registered app), plus a Settings card for everyone — see Authentication below.
+`/settings` stays open so visitors can create/import/export a profile. It also serves an
+SPA fallback for unclaimed paths and an authed **admin console** (Settings → Admin).
+Card metadata lives in the shared registry (`shared/src/apps.ts`). Each mini app is an
+independent Worker bound to `<domain>/<slug>/*` — the most-specific route wins, so child
+apps automatically override this catch-all for their own paths. The bare `/<slug>` path
+is not claimed; inbound links always use the trailing-slash form `/<slug>/`.
 
 Unlike the mini apps, the host has **no Durable Object and no WebSockets**. It does have
-its own D1 (`users.is_admin` gates the admin console, `users.is_member` gates the landing
-grid) and binds each managed child app's D1 directly so operators can manage users across
-apps (membership included).
+its own D1 (`users.is_admin` gates the admin console and grants full grid visibility)
+and binds each managed child app's D1 directly, both so operators can manage users
+across apps (membership included) and to answer per-user grid visibility.
 
 See [`docs/domain-setup.md`](./docs/domain-setup.md) (zone + proxied DNS + routes
 prerequisite) and [`docs/hosting-a-mini-app.md`](./docs/hosting-a-mini-app.md)
@@ -25,18 +28,19 @@ prerequisite) and [`docs/hosting-a-mini-app.md`](./docs/hosting-a-mini-app.md)
 
 ### Client (`client/`)
 
-- `src/apps.ts` — **the landing-grid registry.** One entry per card; `internal: true`
-  entries (Settings) use client-side routing, the rest are real cross-document links to
-  `/<slug>/`
-- `src/routes/home.tsx` — landing grid, gated on membership (`getMemberStatus()`), plus
-  the members-only and "no mini apps yet" states
+- `src/lib/appCards.ts` — the `AppCard` grid/admin card shape, the host-internal cards
+  (Settings, the synthetic "Home (console)" admin card), and `cardForManagedApp()`
+  deriving a card (path `/<slug>/`) from a shared-registry entry
+- `src/routes/home.tsx` — landing grid: joins the caller's `GET /api/my-apps` slugs
+  against `MANAGED_APPS` for metadata, always appends the Settings card, plus the
+  members-only and "no mini apps yet" states
 - `src/routes/settings.tsx` — profile + the admin section (stays open to non-members)
 - `src/components/admin/` — `AdminSection.tsx` (self-gating via `GET /api/admin/status`;
-  prepends a synthetic "Home (console)" card for the host's own D1),
+  lists the host card plus every `MANAGED_APPS` entry),
   `AdminAppCard.tsx` (per-app user management)
 - `src/lib/adminApi.ts` — typed client for the admin API
-- `src/lib/memberApi.ts` — `getMemberStatus()`: restores `window.localFirstAuth` from the
-  stored profile and asks `GET /api/member/status` (the console has no auth context/hook)
+- `src/lib/memberApi.ts` — `getMyApps()`: restores `window.localFirstAuth` from the
+  stored profile and asks `GET /api/my-apps` (the console has no auth context/hook)
 - `public/local-first-auth-manifest.json` — mini-app manifest (name, icon, permissions)
 
 ### Server (`server/`)
@@ -50,10 +54,11 @@ prerequisite) and [`docs/hosting-a-mini-app.md`](./docs/hosting-a-mini-app.md)
 ### Shared (`shared/`)
 
 - `src/apps.ts` — **`MANAGED_APPS` registry + `ChildBindingKey` + `HOST_APP_SLUG`**, the
-  single source of truth shared by `alchemy.run.ts` (binds each child D1 by UUID) and
-  `server/src/admin-apps.ts`. `HOST_APP_SLUG` (`'console'`) is a reserved slug the admin
-  API resolves to the host's own D1. Extend `MANAGED_APPS` + `ChildBindingKey` when
-  registering an app
+  single source of truth shared by `alchemy.run.ts` (binds each child D1 by UUID),
+  `server/src/admin-apps.ts`, and the client landing grid (card display metadata:
+  name/description/icon/accent). `HOST_APP_SLUG` (`'console'`) is a reserved slug the
+  admin API resolves to the host's own D1. Extend `MANAGED_APPS` + `ChildBindingKey`
+  when registering an app
 - `src/jwt.ts` — `decodeAndVerifyJWT` (EdDSA signature, expiry, allowed origin)
 
 ## Development Commands
@@ -75,7 +80,8 @@ pnpm db:generate-migrations  # regenerate migrations from schema changes
 | `GET` | `/api` | Health check | Public |
 | `POST` | `/api/add-user` | Upsert caller's profile (name + socials) | JWT |
 | `POST` | `/api/add-avatar` | Upsert caller's avatar | JWT |
-| `GET` | `/api/member/status` | May the caller use the landing grid? (never errors; `isMember: false`; admins implicitly members) | JWT (Bearer) |
+| `GET` | `/api/member/status` | Is the caller a member of the host itself? (never errors; `isMember: false`; admins implicitly members) | JWT (Bearer) |
+| `GET` | `/api/my-apps` | Which managed apps the landing grid shows the caller (`{isAdmin, apps}`; admins get all, others get per-app membership from each child D1; never errors) | JWT (Bearer) |
 
 ### Admin (`/api/admin/*` — caller must be flagged `is_admin` in the host D1)
 
@@ -102,13 +108,13 @@ The canonical checklist is **"Register with the host console"** in
 [`docs/hosting-a-mini-app.md`](./docs/hosting-a-mini-app.md). In short, after the
 child app's first deploy (you need its real prod D1 UUID from `wrangler d1 list`):
 
-1. `client/src/apps.ts` — add the landing-grid card (`path: '/<slug>/'`, with trailing slash)
-2. `shared/src/apps.ts` — add the entry to `MANAGED_APPS` **and** extend
-   `ChildBindingKey` (replace `never` with the union of binding keys, e.g.
+1. `shared/src/apps.ts` — add the entry to `MANAGED_APPS` (including the card metadata:
+   name, description, icon, accent — the grid links to `/<slug>/`, derived) **and**
+   extend `ChildBindingKey` (replace `never` with the union of binding keys, e.g.
    `'DB_CHECK_IN'` — a `MANAGED_APPS` entry without it is a compile error)
-3. `wrangler.toml` — add the matching `DB_<SLUG>` dev binding (commented example block
+2. `wrangler.toml` — add the matching `DB_<SLUG>` dev binding (commented example block
    is in the file)
-4. Redeploy the host (`pnpm deploy:cloudflare`)
+3. Redeploy the host (`pnpm deploy:cloudflare`)
 
 ## Database
 
@@ -134,8 +140,8 @@ short-lived EdDSA JWTs verified by `shared/src/jwt.ts` against `ALLOWED_PRODUCTI
 
 The console client has **no auth context/provider** — Settings uses `useOnboarding()`
 from `local-first-auth/react` directly, and the Home route asks
-`getMemberStatus()` (`client/src/lib/memberApi.ts`), which restores
-`window.localFirstAuth` from the stored profile and calls `GET /api/member/status`.
+`getMyApps()` (`client/src/lib/memberApi.ts`), which restores
+`window.localFirstAuth` from the stored profile and calls `GET /api/my-apps`.
 Both Home and Settings best-effort upsert the caller into the host D1 on mount via
 `syncProfileToDatabase()` (`client/src/lib/userApi.ts`) — this is what registers
 native-host (Antler) users, who never pass through the web profile editors.
@@ -144,10 +150,10 @@ Landing-grid states (`Home` in `client/src/routes/home.tsx`):
 
 | State | Condition | Show |
 |---|---|---|
-| Resolving | status still `null` | Subtle loading text |
-| Signed out | `'signed-out'` | Members-only card → "create your profile in Settings" |
-| Not a member | `'not-member'` | Members-only card → "ask an admin to make you a member" |
-| Member | `'member'` (or admin) | The grid |
+| Resolving | result still `null` | Subtle loading text |
+| Signed out | no profile / no `window.localFirstAuth` | Members-only card → "create your profile in Settings" |
+| No memberships | zero app memberships and not a host admin | Members-only card → "ask an admin to make you a member" |
+| Member / admin | member of ≥1 app, or host admin (sees all) | The grid, filtered to their apps, plus Settings |
 
 ## Deployment
 
@@ -169,5 +175,10 @@ replace `https://your-domain.example` with your domain.
   *host's* D1 ([`docs/admin-setup.md`](./docs/admin-setup.md))
 - **"Unknown app" from admin endpoints** — slug not in `MANAGED_APPS`, or the dev
   binding is missing from `wrangler.toml`
+- **Grid empty / members-only card in dev** — the dev child-app bindings are empty
+  local copies, so nobody has memberships. Either grant yourself host admin locally
+  ([`docs/admin-setup.md`](./docs/admin-setup.md) — admins see every app) or seed the
+  local child copy, e.g.
+  `pnpm wrangler d1 execute home-recipes-mini-app-dev-db --local --command "INSERT INTO users (did, is_member) VALUES ('<your did>', 1) ON CONFLICT(did) DO UPDATE SET is_member=1"`
 - **Port 8787 in use** — see
   [`../../docs/port-troubleshooting.md`](../../docs/port-troubleshooting.md)

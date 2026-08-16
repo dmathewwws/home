@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 import { HOST_APP_SLUG } from '@home/console-shared'
-import type { MiniApp } from '../../apps'
+import type { AppCard } from '../../lib/appCards'
 import { adminApi, type AdminResult, type AdminUser } from '../../lib/adminApi'
 
 type Status = 'loading' | 'error' | 'empty' | 'loaded'
@@ -20,7 +20,7 @@ function shortDid(did: string): string {
   return `${did.slice(0, 16)}…${did.slice(-6)}`
 }
 
-export function AdminAppCard({ app }: { app: MiniApp }) {
+export function AdminAppCard({ app }: { app: AppCard }) {
   // The host's own users table has no `blocked` column, so its card hides Block.
   const isHostCard = app.slug === HOST_APP_SLUG
   const [status, setStatus] = useState<Status>('loading')

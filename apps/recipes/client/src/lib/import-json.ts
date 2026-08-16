@@ -154,7 +154,7 @@ export function parseImportJson(raw: string): ImportDraft {
 /** Compact format reminder for the "Copy the format" button. */
 export const IMPORT_FORMAT_SNIPPET = `{
   "title": "Crispy chilli tofu",
-  "meal": "main | snack | sauce | salad | dessert",
+  "meal": "main | snack | sauce | salad | sandwich | dessert",
   "minutes": 25,
   "source": {
     "type": "video | book | notes",

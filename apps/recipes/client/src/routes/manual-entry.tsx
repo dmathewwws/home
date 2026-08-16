@@ -1,6 +1,7 @@
 /**
  * "Type it out" — manual recipe entry. Live 140-char counters on cards,
  * ingredient picker with search / add-as-new / frequent tray, swap editor.
+ * RecipeForm also powers the edit flow (edit-recipe.tsx) via `initial`/`recipeId`.
  */
 
 import { useMemo, useState } from 'react'
@@ -8,22 +9,51 @@ import { useNavigate } from 'react-router-dom'
 import { BackButton, SaveBar, TopBar } from '../components/Chrome'
 import { CardEditor } from '../components/CardEditor'
 import { IngredientPicker, type PickedIngredient } from '../components/IngredientPicker'
+import { SecondarySourceEditor } from '../components/SecondarySourceEditor'
 import { SwapEditor } from '../components/SwapEditor'
 import { useLocalFirstAuth } from '../hooks/useLocalFirstAuth'
 import * as api from '../lib/api'
-import { CARD_MAX_CHARS, MEALS, type Meal, type RecipeCard, type RecipeSwap } from '../lib/types'
+import {
+  CARD_MAX_CHARS,
+  MEALS,
+  type Meal,
+  type RecipeCard,
+  type RecipeFull,
+  type RecipeSecondarySource,
+  type RecipeSwap,
+} from '../lib/types'
 import { MEAL_LABELS } from '../lib/format'
 
 export function ManualEntry() {
+  return <RecipeForm />
+}
+
+interface RecipeFormProps {
+  /** Prefill; absent = blank add form */
+  initial?: RecipeFull
+  /** Present = edit mode (saves via update instead of create) */
+  recipeId?: string
+}
+
+export function RecipeForm({ initial, recipeId }: RecipeFormProps) {
   const navigate = useNavigate()
   const { getProfileJwt } = useLocalFirstAuth()
+  const editing = !!recipeId
 
-  const [title, setTitle] = useState('')
-  const [meal, setMeal] = useState<Meal>('main')
-  const [minutes, setMinutes] = useState(30)
-  const [picked, setPicked] = useState<PickedIngredient[]>([])
-  const [cards, setCards] = useState<RecipeCard[]>([{ text: '' }])
-  const [swaps, setSwaps] = useState<RecipeSwap[]>([])
+  const [title, setTitle] = useState(initial?.title ?? '')
+  const [meal, setMeal] = useState<Meal>(initial?.meal ?? 'main')
+  const [minutes, setMinutes] = useState(initial?.minutes ?? 30)
+  const [picked, setPicked] = useState<PickedIngredient[]>(
+    initial?.ingredients.map((chip) => ({
+      ingredientId: chip.id,
+      name: chip.name,
+      role: chip.role,
+      amount: chip.amount,
+    })) ?? [],
+  )
+  const [cards, setCards] = useState<RecipeCard[]>(initial?.cards.length ? initial.cards : [{ text: '' }])
+  const [swaps, setSwaps] = useState<RecipeSwap[]>(initial?.swaps ?? [])
+  const [secondarySources, setSecondarySources] = useState<RecipeSecondarySource[]>(initial?.secondarySources ?? [])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -38,11 +68,17 @@ export function ManualEntry() {
     setSaving(true)
     setError(null)
     try {
-      const recipe = await api.createRecipe(getProfileJwt, {
+      const draft = {
         title: title.trim(),
         meal,
         minutes,
-        sourceType: 'notes',
+        // The update endpoint fully replaces the row, so edits must echo the
+        // recipe's source block back or an imported recipe loses its link.
+        sourceType: initial?.sourceType ?? 'notes',
+        sourceUrl: initial?.sourceUrl ?? null,
+        sourceAuthor: initial?.sourceAuthor ?? null,
+        sourceDetail: initial?.sourceDetail ?? null,
+        thumbUrl: initial?.thumbUrl ?? null,
         ingredients: picked.map((p) =>
           p.ingredientId
             ? { ingredientId: p.ingredientId, amount: p.amount }
@@ -50,8 +86,15 @@ export function ManualEntry() {
         ),
         cards: filledCards.map((c) => ({ text: c.text.trim(), ...(c.timer?.trim() ? { timer: c.timer.trim() } : {}) })),
         swaps,
-      })
-      navigate(`/recipe/${recipe.id}`, { replace: true })
+        secondarySources,
+      }
+      if (recipeId) {
+        await api.updateRecipe(getProfileJwt, recipeId, draft)
+        navigate(`/recipe/${recipeId}`, { replace: true })
+      } else {
+        const recipe = await api.createRecipe(getProfileJwt, draft)
+        navigate(`/recipe/${recipe.id}`, { replace: true })
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save')
       setSaving(false)
@@ -61,7 +104,10 @@ export function ManualEntry() {
   return (
     <section className="flex-1 flex flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto">
-        <TopBar left={<BackButton to="/" label="Cancel" />} right={<span className="eyebrow">Typing it out</span>} />
+        <TopBar
+          left={<BackButton to={editing ? `/recipe/${recipeId}` : '/'} label="Cancel" />}
+          right={<span className="eyebrow">{editing ? 'Editing' : 'Typing it out'}</span>}
+        />
         <div className="page-col px-5 pb-8">
           <input
             className="write outline-none"
@@ -139,11 +185,20 @@ export function ManualEntry() {
             </div>
           </div>
 
+          {editing && (
+            <div className="my-[26px]">
+              <span className="tape mb-3.5">Secondary sources</span>
+              <div className="mt-2">
+                <SecondarySourceEditor sources={secondarySources} onChange={setSecondarySources} />
+              </div>
+            </div>
+          )}
+
           {error && <p className="text-sear text-[14px] mb-4">{error}</p>}
         </div>
       </div>
       <SaveBar
-        label={saving ? 'Saving…' : anyOver ? 'A card is over 140' : 'Save to the box'}
+        label={saving ? 'Saving…' : anyOver ? 'A card is over 140' : editing ? 'Save changes' : 'Save to the box'}
         onClick={save}
         disabled={!canSave}
       />

@@ -47,7 +47,7 @@ everything else has a default.
 | Field | Required | Default | Constraints |
 |---|---|---|---|
 | `title` | yes | — | non-empty, ≤200 chars |
-| `meal` | no | `"main"` | `main` \| `snack` \| `sauce` \| `salad` \| `dessert` |
+| `meal` | no | `"main"` | `main` \| `snack` \| `sauce` \| `salad` \| `sandwich` \| `dessert` |
 | `minutes` | no | `30` | integer 1–6000; realistic active time, not video length |
 | `source` | no | type `notes`, rest null | object |
 | `source.type` | no | `"video"` when `source` is present | `video` \| `book` \| `notes` |

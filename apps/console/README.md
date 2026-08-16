@@ -5,7 +5,8 @@
 This repo is the **host** for a collection of Home mini apps. It's a single catch-all
 Cloudflare Worker that:
 
-- serves a **landing grid** of mini apps at `/` (driven by `client/src/apps.ts`),
+- serves a **landing grid** of mini apps at `/`, filtered to the apps the signed-in
+  user is a member of (admins see all),
 - provides an **SPA fallback** for any path not claimed by a child app, and
 - exposes an authed **admin console** (Settings → Admin) for managing users across every
   mini app.
@@ -17,10 +18,13 @@ This makes it easy to code, deploy and manage each app separately. Each app is b
 
 ## How it works
 
-**Landing grid.** The cards shown at `/` come from `client/src/apps.ts` (the `apps` array).
-Each entry links to `/<slug>/` as a real cross-document navigation, so the request lands on
-that child app's Worker. Host-served routes (like Settings) are marked `internal` and use
-client-side routing instead.
+**Landing grid.** Card metadata (name, description, icon, accent) lives in the
+`MANAGED_APPS` registry (`shared/src/apps.ts`); which cards a given user sees comes from
+`GET /api/my-apps`, which checks the user's membership in each child app's database
+(host admins see every app). Everyone with access also gets a Settings card. Each app
+card links to `/<slug>/` as a real cross-document navigation, so the request lands on
+that child app's Worker; host-served routes (like Settings) use client-side routing
+instead.
 
 **Child apps.** Mini apps deploy as their own Workers, each with
 its own D1 database and (if needed) Durable Object. They bind two route patterns —
@@ -62,8 +66,8 @@ pnpm dev:simulator      # ...or start with a Local First Auth test user
 
 Follow the canonical checklist — **"Register with the host console"** in
 [`docs/hosting-a-mini-app.md`](./docs/hosting-a-mini-app.md). In short: deploy the
-child app once, then add its card to `client/src/apps.ts`, add it to `MANAGED_APPS`
-**and** `ChildBindingKey` in `shared/src/apps.ts` (required together — one without the
+child app once, then add it (card metadata included) to `MANAGED_APPS` **and**
+`ChildBindingKey` in `shared/src/apps.ts` (required together — one without the
 other is a compile error), add the `DB_<SLUG>` dev binding in `wrangler.toml`, and
 redeploy the host.
 

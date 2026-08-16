@@ -270,5 +270,5 @@ Next steps:
       edit the literal in each app's alchemy.run.ts and the template's)
   4. After the first deploy, register the app with the host console — follow
      "Register with the host console" in apps/console/docs/hosting-a-mini-app.md
-     (grid card, MANAGED_APPS + ChildBindingKey, DB_${slug.replace(/-/g, '_').toUpperCase()} dev binding, redeploy host).
+     (MANAGED_APPS entry with card metadata + ChildBindingKey, DB_${slug.replace(/-/g, '_').toUpperCase()} dev binding, redeploy host).
 `)

@@ -4,6 +4,7 @@ import { AppShell } from './app-shell'
 import { TabShell } from './tab-shell'
 import { RecipeList } from './recipe-list'
 import { RecipeDetail } from './recipe-detail'
+import { EditRecipe } from './edit-recipe'
 import { ReflectionsList } from './reflections-list'
 import { PasteJson } from './paste-json'
 import { ImportReview } from './import-review'
@@ -28,6 +29,7 @@ export const router = createBrowserRouter(
               ],
             },
             { path: 'recipe/:id', element: <RecipeDetail /> },
+            { path: 'recipe/:id/edit', element: <EditRecipe /> },
             { path: 'add/paste', element: <PasteJson /> },
             { path: 'add/review', element: <ImportReview /> },
             { path: 'add/manual', element: <ManualEntry /> },

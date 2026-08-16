@@ -1,6 +1,6 @@
 /** Shared client-side shapes mirroring the server's API responses. */
 
-export const MEALS = ['main', 'snack', 'sauce', 'salad', 'dessert'] as const
+export const MEALS = ['main', 'snack', 'sauce', 'salad', 'sandwich', 'dessert'] as const
 export type Meal = (typeof MEALS)[number]
 
 export type SourceType = 'video' | 'book' | 'notes'
@@ -20,6 +20,12 @@ export interface RecipeCard {
 export interface RecipeSwap {
   ingredient: string
   replacement: string
+}
+
+export interface RecipeSecondarySource {
+  url: string
+  label: string
+  notes: string[]
 }
 
 export interface RecipeChip {
@@ -49,6 +55,7 @@ export interface RecipeListItem {
 export interface RecipeFull extends RecipeListItem {
   cards: RecipeCard[]
   swaps: RecipeSwap[]
+  secondarySources: RecipeSecondarySource[]
   lastReflection: {
     cookedAt: string
     rep: number
@@ -98,6 +105,7 @@ export interface RecipeDraft {
   ingredients: RecipeDraftIngredient[]
   cards: RecipeCard[]
   swaps: RecipeSwap[]
+  secondarySources: RecipeSecondarySource[]
 }
 
 export interface ReflectionDraft {

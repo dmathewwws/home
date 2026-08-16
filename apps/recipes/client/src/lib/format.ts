@@ -52,5 +52,6 @@ export const MEAL_LABELS: Record<string, string> = {
   snack: 'Snack',
   sauce: 'Sauce',
   salad: 'Salad',
+  sandwich: 'Sandwich',
   dessert: 'Dessert',
 }

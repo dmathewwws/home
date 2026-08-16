@@ -80,8 +80,8 @@ this).
    the template).
 3. After its first deploy, register it with the host console (needs the real prod D1
    UUID): follow "Register with the host console" in
-   `apps/console/docs/hosting-a-mini-app.md` — landing-grid card, `MANAGED_APPS` +
-   `ChildBindingKey`, `DB_<SLUG>` dev binding, redeploy the host.
+   `apps/console/docs/hosting-a-mini-app.md` — `MANAGED_APPS` entry (with grid-card
+   metadata) + `ChildBindingKey`, `DB_<SLUG>` dev binding, redeploy the host.
 
 ## Auth in one paragraph
 

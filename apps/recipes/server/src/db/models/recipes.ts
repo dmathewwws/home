@@ -14,6 +14,7 @@ import {
   type Recipe,
   type RecipeCard,
   type RecipeSwap,
+  type RecipeSecondarySource,
   type Meal,
   type SourceType,
   type IngredientRole,
@@ -49,6 +50,7 @@ export interface RecipeListItem {
 export interface RecipeFull extends RecipeListItem {
   cards: RecipeCard[]
   swaps: RecipeSwap[]
+  secondarySources: RecipeSecondarySource[]
   lastReflection: {
     cookedAt: Date
     rep: number
@@ -76,6 +78,7 @@ export interface RecipeInput {
   ingredients: RecipeIngredientInput[]
   cards: RecipeCard[]
   swaps: RecipeSwap[]
+  secondarySources: RecipeSecondarySource[]
 }
 
 async function chipsForRecipes(db: Database, recipeIds: string[]): Promise<Map<string, RecipeChip[]>> {
@@ -177,6 +180,7 @@ export async function getRecipeFull(db: Database, id: string): Promise<RecipeFul
     ...toListItem(recipe, chips.get(id) ?? [], stats.get(id)),
     cards: JSON.parse(recipe.cards) as RecipeCard[],
     swaps: JSON.parse(recipe.swaps) as RecipeSwap[],
+    secondarySources: JSON.parse(recipe.secondarySources) as RecipeSecondarySource[],
     lastReflection: latest
       ? {
           cookedAt: latest.cookedAt,
@@ -238,6 +242,7 @@ export async function createRecipe(db: Database, createdBy: string, input: Recip
     thumbUrl: input.thumbUrl ?? null,
     cards: JSON.stringify(input.cards),
     swaps: JSON.stringify(input.swaps),
+    secondarySources: JSON.stringify(input.secondarySources),
     createdBy,
   })
   if (joinRows.length > 0) {
@@ -269,6 +274,7 @@ export async function updateRecipe(db: Database, id: string, input: RecipeInput)
         thumbUrl: input.thumbUrl ?? null,
         cards: JSON.stringify(input.cards),
         swaps: JSON.stringify(input.swaps),
+        secondarySources: JSON.stringify(input.secondarySources),
         updatedAt: sql`(unixepoch())`,
       })
       .where(eq(recipes.id, id)),

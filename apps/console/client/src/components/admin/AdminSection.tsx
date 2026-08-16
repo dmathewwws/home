@@ -6,24 +6,10 @@
  * only — every admin endpoint independently re-verifies the caller server-side.
  */
 import { useEffect, useState } from 'react'
-import { HOST_APP_SLUG } from '@home/console-shared'
-import { apps, type MiniApp } from '../../apps'
+import { MANAGED_APPS } from '@home/console-shared'
+import { cardForManagedApp, hostCard } from '../../lib/appCards'
 import { adminApi } from '../../lib/adminApi'
 import { AdminAppCard } from './AdminAppCard'
-
-/**
- * Synthetic card for the host's own D1 (landing-grid membership + operators). Not in
- * the landing-grid registry — the server resolves this reserved slug to its own DB.
- */
-const hostApp: MiniApp = {
-  slug: HOST_APP_SLUG,
-  name: 'Home (console)',
-  description: 'Landing-grid membership and operators.',
-  path: '/',
-  icon: '🏠',
-  accent: 'from-slate-400 to-slate-300',
-  internal: true,
-}
 
 export function AdminSection() {
   // null = still resolving; false = not an admin; true = show the console.
@@ -41,7 +27,7 @@ export function AdminSection() {
 
   if (!isAdmin) return null
 
-  const managed = [hostApp, ...apps.filter((a) => !a.internal)]
+  const managed = [hostCard, ...MANAGED_APPS.map(cardForManagedApp)]
 
   return (
     <section className="mt-12 pt-8 border-t border-gray-200">

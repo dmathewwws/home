@@ -1,0 +1,1 @@
+ALTER TABLE `recipes` ADD `secondary_sources` text DEFAULT '[]' NOT NULL;

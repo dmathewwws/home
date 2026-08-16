@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { apps, type MiniApp } from '../apps'
-import { getMemberStatus, type MemberStatus } from '../lib/memberApi'
+import { MANAGED_APPS } from '@home/console-shared'
+import { cardForManagedApp, settingsCard, type AppCard } from '../lib/appCards'
+import { getMyApps, type MyApps } from '../lib/memberApi'
 import { syncProfileToDatabase } from '../lib/userApi'
 
 /** Card classes shared by external (cross-document) and internal (host route) links. */
@@ -9,25 +10,25 @@ const cardClasses =
   'card group block h-full p-6 transition-all hover:-translate-y-1 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary'
 
 export function Home() {
-  // The grid is members-only; /settings stays open so a visitor can create the
-  // profile an operator then approves. null = still resolving.
-  const [memberStatus, setMemberStatus] = useState<MemberStatus | null>(null)
+  // The grid shows the apps the caller is a member of (admins see all); /settings stays
+  // open so a visitor can create the profile an operator then approves. null = resolving.
+  const [myApps, setMyApps] = useState<MyApps | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    getMemberStatus().then((status) => {
-      if (!cancelled) setMemberStatus(status)
+    getMyApps().then((result) => {
+      if (!cancelled) setMyApps(result)
       // Best-effort registration so an admin has a users row to approve: native-host
       // (Antler) users land here and never pass through a profile editor. Runs after
-      // getMemberStatus(), which restores window.localFirstAuth for web users.
-      if (status !== 'signed-out') void syncProfileToDatabase()
+      // getMyApps(), which restores window.localFirstAuth for web users.
+      if (result.kind !== 'signed-out') void syncProfileToDatabase()
     })
     return () => {
       cancelled = true
     }
   }, [])
 
-  if (memberStatus === null) {
+  if (myApps === null) {
     return (
       <div className="w-full max-w-5xl mx-auto px-4 py-12 sm:py-16 text-center text-sm text-gray-400">
         Loading…
@@ -35,9 +36,19 @@ export function Home() {
     )
   }
 
-  if (memberStatus !== 'member') return <MembersOnly status={memberStatus} />
+  if (myApps.kind === 'signed-out') return <MembersOnly signedOut />
+  if (myApps.slugs.length === 0 && !myApps.isAdmin) return <MembersOnly signedOut={false} />
 
-  const hasMiniApps = apps.some((app) => !app.internal)
+  // Join the caller's slugs against the shared registry for display metadata; Settings
+  // is always appended so every member/admin can reach their profile.
+  const gridApps: AppCard[] = [
+    ...myApps.slugs.flatMap((slug) => {
+      const app = MANAGED_APPS.find((a) => a.slug === slug)
+      return app ? [cardForManagedApp(app)] : []
+    }),
+    settingsCard,
+  ]
+  const hasMiniApps = gridApps.some((app) => !app.internal)
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-12 sm:py-16">
@@ -52,15 +63,15 @@ export function Home() {
           <p className="text-lg font-semibold text-gray-700">No mini apps yet</p>
           <p className="mt-2 text-sm">
             Scaffold one with <code className="font-mono">pnpm new-app &lt;slug&gt;</code>, then
-            add its card to <code className="font-mono">client/src/apps.ts</code> and register
-            it in <code className="font-mono">shared/src/apps.ts</code> — see{' '}
+            register it (card metadata included) in{' '}
+            <code className="font-mono">shared/src/apps.ts</code> — see{' '}
             <code className="font-mono">docs/hosting-a-mini-app.md</code>.
           </p>
         </div>
       )}
 
       <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {apps.map((app) => (
+        {gridApps.map((app) => (
           <li key={app.slug}>
             {/* Internal cards (e.g. Settings) are host routes → client-side Link.
                 External cards are separate Workers/documents → real anchor so the
@@ -81,8 +92,8 @@ export function Home() {
   )
 }
 
-/** Gate screen for signed-out visitors and signed-in non-members. */
-function MembersOnly({ status }: { status: MemberStatus }) {
+/** Gate screen for signed-out visitors and signed-in users with no app memberships. */
+function MembersOnly({ signedOut }: { signedOut: boolean }) {
   return (
     <div className="w-full max-w-lg mx-auto px-4 py-16 sm:py-24 text-center">
       <div className="card p-10">
@@ -90,14 +101,15 @@ function MembersOnly({ status }: { status: MemberStatus }) {
           🔒
         </p>
         <h1 className="mt-4 text-2xl font-bold tracking-tight text-gray-900">Members only</h1>
-        {status === 'signed-out' ? (
+        {signedOut ? (
           <p className="mt-3 text-sm text-gray-500">
             Create your profile in Settings to get started — an admin can then make you a
             member.
           </p>
         ) : (
           <p className="mt-3 text-sm text-gray-500">
-            Profile created — ask an admin to make you a member, then come back here.
+            Profile created — ask an admin to make you a member of an app, then come back
+            here.
           </p>
         )}
         <Link to="/settings" className="btn-primary mt-6 inline-block px-5 py-2 text-sm">
@@ -109,7 +121,7 @@ function MembersOnly({ status }: { status: MemberStatus }) {
 }
 
 /** Shared inner markup for both internal and external app cards. */
-function CardBody({ app }: { app: MiniApp }) {
+function CardBody({ app }: { app: AppCard }) {
   return (
     <>
       <div

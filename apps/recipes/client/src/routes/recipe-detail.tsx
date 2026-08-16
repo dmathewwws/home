@@ -151,25 +151,52 @@ export function RecipeDetail() {
           </div>
         )}
 
-        {canDelete && (
-          <div className="mt-10 border-t border-rule pt-4">
-            {confirmDelete ? (
-              <div className="flex items-center gap-3">
-                <span className="text-[14px] text-sear">Take it out of the box for everyone?</span>
-                <button type="button" className="chip !text-sear !border-sear" onClick={handleDelete}>
-                  Yes, remove
-                </button>
-                <button type="button" className="chip" onClick={() => setConfirmDelete(false)}>
-                  Keep it
-                </button>
+        {recipe.secondarySources.length > 0 && (
+          <div className="my-[26px] border-t border-rule pt-[13px]">
+            <em className="eyebrow not-italic !text-[10px] block mb-2">Also see</em>
+            {recipe.secondarySources.map((source, i) => (
+              <div key={i} className="py-1.5">
+                <a className="mono-link" href={source.url} target="_blank" rel="noreferrer">
+                  {source.label} &rarr;
+                </a>
+                {source.notes.map((note, n) => (
+                  <p key={n} className="pl-3.5 pt-1 text-[14.5px] leading-[1.42]">
+                    {note}
+                  </p>
+                ))}
               </div>
-            ) : (
-              <button type="button" className="eyebrow underline underline-offset-2" onClick={() => setConfirmDelete(true)}>
-                Remove from the box
-              </button>
-            )}
+            ))}
           </div>
         )}
+
+        <div className="mt-10 border-t border-rule pt-4 flex items-center gap-5">
+          {confirmDelete ? (
+            <div className="flex items-center gap-3">
+              <span className="text-[14px] text-sear">Take it out of the box for everyone?</span>
+              <button type="button" className="chip !text-sear !border-sear" onClick={handleDelete}>
+                Yes, remove
+              </button>
+              <button type="button" className="chip" onClick={() => setConfirmDelete(false)}>
+                Keep it
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="eyebrow underline underline-offset-2"
+                onClick={() => navigate(`/recipe/${recipe.id}/edit`)}
+              >
+                Edit this recipe
+              </button>
+              {canDelete && (
+                <button type="button" className="eyebrow underline underline-offset-2" onClick={() => setConfirmDelete(true)}>
+                  Remove from the box
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </section>
   )
