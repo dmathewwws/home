@@ -180,7 +180,11 @@ export async function getRecipeFull(db: Database, id: string): Promise<RecipeFul
     ...toListItem(recipe, chips.get(id) ?? [], stats.get(id)),
     cards: JSON.parse(recipe.cards) as RecipeCard[],
     swaps: JSON.parse(recipe.swaps) as RecipeSwap[],
-    secondarySources: JSON.parse(recipe.secondarySources) as RecipeSecondarySource[],
+    // Tolerate pre-0007 rows where notes was still a string[].
+    secondarySources: (JSON.parse(recipe.secondarySources) as RecipeSecondarySource[]).map((s) => ({
+      ...s,
+      notes: Array.isArray(s.notes) ? s.notes.map((n) => `- ${n}`).join('\n') : s.notes,
+    })),
     lastReflection: latest
       ? {
           cookedAt: latest.cookedAt,

@@ -25,7 +25,7 @@ export interface RecipeSwap {
 export interface RecipeSecondarySource {
   url: string
   label: string
-  notes: string[]
+  notes: string
 }
 
 export interface RecipeChip {

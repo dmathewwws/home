@@ -48,7 +48,7 @@ export interface RecipeSwap {
 export interface RecipeSecondarySource {
   url: string
   label: string // who/what it is: "Kenji López-Alt", "Serious Eats"
-  notes: string[] // the tips worth keeping from this source
+  notes: string // free-text tips worth keeping from this source, newline-separated points
 }
 
 export const recipes = sqliteTable('recipes', {

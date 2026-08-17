@@ -159,11 +159,11 @@ export function RecipeDetail() {
                 <a className="mono-link" href={source.url} target="_blank" rel="noreferrer">
                   {source.label} &rarr;
                 </a>
-                {source.notes.map((note, n) => (
-                  <p key={n} className="pl-3.5 pt-1 text-[14.5px] leading-[1.42]">
-                    {note}
+                {source.notes && (
+                  <p className="pl-3.5 pt-1 text-[14.5px] leading-[1.42] whitespace-pre-line">
+                    {source.notes}
                   </p>
-                ))}
+                )}
               </div>
             ))}
           </div>

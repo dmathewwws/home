@@ -1,6 +1,7 @@
 /**
  * Secondary sources editor: other takes on the dish (a pro chef's video, an
- * article) — a link plus the tips worth keeping from it. Edit-screen only.
+ * article) — a link plus a free-text block of tips worth keeping from it.
+ * Edit-screen only.
  */
 
 import { useState } from 'react'
@@ -15,28 +16,18 @@ export function SecondarySourceEditor({ sources, onChange }: SecondarySourceEdit
   const [adding, setAdding] = useState(false)
   const [url, setUrl] = useState('')
   const [label, setLabel] = useState('')
-  const [notingFor, setNotingFor] = useState<number | null>(null)
-  const [note, setNote] = useState('')
 
   const commitSource = () => {
     if (url.trim() && label.trim()) {
-      onChange([...sources, { url: url.trim(), label: label.trim(), notes: [] }])
+      onChange([...sources, { url: url.trim(), label: label.trim(), notes: '' }])
     }
     setUrl('')
     setLabel('')
     setAdding(false)
   }
 
-  const commitNote = (i: number) => {
-    if (note.trim()) {
-      onChange(sources.map((s, j) => (j === i ? { ...s, notes: [...s.notes, note.trim()] } : s)))
-    }
-    setNote('')
-    setNotingFor(null)
-  }
-
-  const removeNote = (i: number, n: number) =>
-    onChange(sources.map((s, j) => (j === i ? { ...s, notes: s.notes.filter((_, m) => m !== n) } : s)))
+  const setNotes = (i: number, notes: string) =>
+    onChange(sources.map((s, j) => (j === i ? { ...s, notes } : s)))
 
   return (
     <div>
@@ -55,47 +46,14 @@ export function SecondarySourceEditor({ sources, onChange }: SecondarySourceEdit
               &times;
             </button>
           </div>
-          {source.notes.map((text, n) => (
-            <div key={n} className="flex gap-[9px] items-baseline py-1 pl-3.5 text-[14.5px]">
-              <span className="flex-1">{text}</span>
-              <button
-                type="button"
-                onClick={() => removeNote(i, n)}
-                className="font-mono2 text-[10px] text-muted"
-                aria-label={`Remove note ${n + 1} from ${source.label}`}
-              >
-                &times;
-              </button>
-            </div>
-          ))}
-          {notingFor === i ? (
-            <div className="mt-1 pl-3.5 space-y-2">
-              <input
-                autoFocus
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && commitNote(i)}
-                placeholder="What do they do differently?"
-                className="w-full bg-kraft-lift border border-rule px-2.5 py-1.5 text-[14px] placeholder:text-rule outline-none"
-              />
-              <div className="flex gap-2">
-                <button type="button" className="chip" onClick={() => commitNote(i)}>
-                  Keep note
-                </button>
-                <button type="button" className="chip" onClick={() => { setNote(''); setNotingFor(null) }}>
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              className="font-mono2 text-[10px] text-muted mt-1 pl-3.5"
-              onClick={() => { setNote(''); setNotingFor(i) }}
-            >
-              + Add a note
-            </button>
-          )}
+          <textarea
+            value={source.notes}
+            onChange={(e) => setNotes(i, e.target.value)}
+            rows={Math.max(2, source.notes.split('\n').length)}
+            placeholder={'- what do they do differently?'}
+            aria-label={`Notes for ${source.label}`}
+            className="mt-1 ml-3.5 w-[calc(100%-0.875rem)] bg-kraft-lift border border-rule px-2.5 py-1.5 text-[14px] leading-[1.42] placeholder:text-rule outline-none resize-none"
+          />
         </div>
       ))}
       {adding ? (
