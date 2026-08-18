@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+/* =============================================================================
+   Theme (Tailwind v4 CSS-first) — flat light status-page look: cool gray
+   ground, white cards, hairline borders, near-black ink, DM Sans with DM Mono
+   accents, muted activity palette.
+   Activity colors mirror client/src/lib/activities.ts.
+   ============================================================================= */
+
+@theme {
+  --color-bg: #F6F7F9;
+  --color-card: #FFFFFF;
+  --color-line: #EAECF0;
+  --color-line-2: #E8EAED;
+  --color-line-btn: #E0E2E6;
+  --color-input: #D1D5DB;
+  --color-inset: #FAFBFC;
+  --color-chip: #F0F1F3;
+
+  --color-ink: #1A1D23;
+  --color-ink-hover: #2D3140;
+  --color-ink-2: #4B5058;
+  --color-ink-3: #8C919A;
+  --color-faint: #A0A5AD;
+  --color-weekday: #B0B5BD;
+
+  /* Calendar tile states */
+  --color-rest: #F0F1F3;
+  --color-future: #FAFBFC;
+
+  /* Deltas (down doubles as danger) */
+  --color-up: #3F8E5A;
+  --color-down: #C4703A;
+  --color-danger-line: #F2D9C9;
+  --color-danger-bg: #FBF1EA;
+
+  /* Activities */
+  --color-bike: #5FA8A0;
+  --color-yoga: #A48BC9;
+  --color-bball: #E0A458;
+  --color-stretch: #93B88B;
+  --color-outrig: #5B84C4;
+  --color-disc: #A9B75C;
+  --color-badm: #C77E8F;
+  --color-swim: #64AFCF;
+
+  --font-display: "DM Sans", system-ui, sans-serif;
+  --font-body: "DM Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@layer components {
+  /* Centered content column: full-bleed page background, constrained content */
+  .page-col {
+    width: 100%;
+    max-width: 760px;
+    margin-inline: auto;
+  }
+
+  .card {
+    background: var(--color-card);
+    border: 1px solid var(--color-line);
+    border-radius: 24px;
+    padding: 16px 14px;
+  }
+
+  .card-title {
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+  }
+
+  /* Mono meta line beside card titles (counts, timestamps, window labels) */
+  .card-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-ink-3);
+    font-weight: 400;
+  }
+
+  /* Primary button — solid ink (used by onboarding/waiting screens) */
+  .btn-primary {
+    @apply bg-ink text-white rounded-full font-semibold transition hover:bg-ink-hover disabled:bg-input disabled:text-ink-3 active:scale-[.97];
+  }
+
+  /* Small uppercase label above card titles */
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-ink-2);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}

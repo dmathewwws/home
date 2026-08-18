@@ -6,6 +6,9 @@
     },
     {
       "path": "./apps/recipes"
+    },
+    {
+      "path": "./apps/fitness"
     }
   ]
 }
