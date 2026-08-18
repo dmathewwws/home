@@ -20,7 +20,7 @@
  */
 export const HOST_APP_SLUG = 'console'
 
-export type ChildBindingKey = 'DB_RECIPES'
+export type ChildBindingKey = 'DB_RECIPES' | 'DB_FITNESS'
 
 export interface ManagedApp {
   /** URL slug; the landing-grid card links to `/<slug>/`. */
@@ -51,5 +51,15 @@ export const MANAGED_APPS: ManagedApp[] = [
     bindingKey: 'DB_RECIPES',
     dbName: 'home-recipes-mini-app-prod-db',
     databaseId: '0536c6b8-3f42-4c11-a0af-a26be54e5413',
+  },
+  {
+    slug: 'fitness',
+    name: 'Fitness',
+    description: 'Track your workouts.',
+    icon: '💪',
+    accent: 'from-emerald-400 to-teal-300',
+    bindingKey: 'DB_FITNESS',
+    dbName: 'home-fitness-mini-app-prod-db',
+    databaseId: '0c4a640a-7a77-4bc2-86f3-f03386f79f9c',
   },
 ]

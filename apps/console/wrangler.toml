@@ -26,6 +26,11 @@ binding = "DB_RECIPES"
 database_name = "home-recipes-mini-app-dev-db"
 database_id = "recipes-local"
 
+[[d1_databases]]
+binding = "DB_FITNESS"
+database_name = "home-fitness-mini-app-dev-db"
+database_id = "fitness-local"
+
 # Static assets (client build)
 # In dev: Vite serves the client at :5173 (this is unused).
 # In production: Alchemy uploads ./client/dist to Workers Assets.
