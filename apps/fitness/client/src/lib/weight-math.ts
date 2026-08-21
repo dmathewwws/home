@@ -1,10 +1,11 @@
 /**
  * Derivations for the Weight tab: current entry, delta since the start of
- * the 3-month window, and a time-correct kg/week trend.
+ * the selected range, and a time-correct kg/week trend.
  */
 
 import type { WeightEntry } from './types'
-import { getPeriod } from './period'
+import type { DateRange } from './period'
+import { daysBetween } from './dates'
 
 export interface WeightStats {
   windowEntries: WeightEntry[]
@@ -17,16 +18,13 @@ export interface WeightStats {
   trendKgPerWeek: number | null
 }
 
-function daysBetween(fromKey: string, toKey: string): number {
-  const [fy, fm, fd] = fromKey.split('-').map(Number)
-  const [ty, tm, td] = toKey.split('-').map(Number)
-  return Math.round((new Date(ty, tm - 1, td).getTime() - new Date(fy, fm - 1, fd).getTime()) / 86400000)
-}
+export function deriveWeightStats(entries: WeightEntry[], range: DateRange): WeightStats {
+  // Lower bound only: every range ends at today, and the log endpoint permits
+  // a today+1 entry that an upper clamp would silently hide.
+  const windowEntries = entries.filter((e) => e.date >= range.fromKey)
 
-export function deriveWeightStats(entries: WeightEntry[]): WeightStats {
-  const period = getPeriod(0)
-  const windowEntries = entries.filter((e) => e.date >= period.fromKey && e.date <= period.toKey)
-
+  // Ranges are today-anchored, so the newest entry overall is also the newest
+  // in a non-empty window — no need for separate window/global "current".
   const current = entries.length ? entries[entries.length - 1] : null
   const windowStart = windowEntries.length ? windowEntries[0] : null
   const deltaKg = current && windowStart ? windowStart.kg - current.kg : null
@@ -45,5 +43,5 @@ export function deriveWeightStats(entries: WeightEntry[]): WeightStats {
     }
   }
 
-  return { windowEntries, windowLabel: period.label, current, windowStart, deltaKg, trendKgPerWeek }
+  return { windowEntries, windowLabel: range.label, current, windowStart, deltaKg, trendKgPerWeek }
 }

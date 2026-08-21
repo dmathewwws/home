@@ -3,12 +3,13 @@
  *
  * Deploys the starter mini-app to Cloudflare:
  * - D1 Database for user storage
+ * - R2 Bucket for weight-entry progress photos
  * - Durable Object for real-time WebSocket broadcasting
  * - Worker for API and static asset serving
  */
 
 import alchemy from 'alchemy'
-import { Assets, D1Database, DurableObjectNamespace, Worker } from 'alchemy/cloudflare'
+import { Assets, D1Database, DurableObjectNamespace, R2Bucket, Worker } from 'alchemy/cloudflare'
 import { CloudflareStateStore } from 'alchemy/state'
 import type { Broadcaster } from './server/src/durable-object'
 
@@ -41,6 +42,32 @@ const database = await D1Database(`${app.name}-${app.stage}-db`, {
 })
 
 /**
+ * R2 Bucket
+ * Progress photos attached to weight entries (full + thumb per photo). CORS
+ * allows the browser's presigned PUTs from the prod origin and local dev.
+ */
+const photosBucket = await R2Bucket(`${app.name}-${app.stage}-photos`, {
+  name: `${app.name}-${app.stage}-photos`,
+  adopt: true,
+  cors: [
+    {
+      allowed: {
+        methods: ['PUT'],
+        origins: [ALLOWED_PRODUCTION_ORIGIN, 'http://localhost:5175'],
+        headers: ['content-type'],
+      },
+      maxAgeSeconds: 3600,
+    },
+  ],
+})
+
+// S3-compat creds for presigning direct-to-R2 uploads (Cloudflare dashboard →
+// R2 → Manage R2 API Tokens → "Object Read & Write"). Optional: while unset,
+// photo bytes flow through the worker's dev-upload route instead — functional,
+// just not direct-to-R2.
+const hasR2Creds = !!(process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY)
+
+/**
  * Static Assets
  * Client build directory containing the React app
  */
@@ -69,6 +96,16 @@ export const worker = await Worker('worker', {
     DURABLE_OBJECT: durableObject,
     ASSETS: staticAssets,
     ALLOWED_PRODUCTION_ORIGIN,
+    PHOTOS_BUCKET: photosBucket,
+    // Presign config — bound only when the R2 API creds are in .env.
+    ...(hasR2Creds
+      ? {
+          R2_BUCKET_NAME: photosBucket.name,
+          R2_ACCOUNT_ID: alchemy.secret.env.CLOUDFLARE_ACCOUNT_ID,
+          R2_ACCESS_KEY_ID: alchemy.secret.env.R2_ACCESS_KEY_ID,
+          R2_SECRET_ACCESS_KEY: alchemy.secret.env.R2_SECRET_ACCESS_KEY,
+        }
+      : {}),
     // Example runtime secret — the full pattern (see docs/secrets.md):
     //   1. add MY_SECRET= to .env and .env.example
     //   2. add it to [secrets] required in wrangler.toml (local dev)
@@ -105,6 +142,7 @@ console.log('✅ Alchemy deployment complete')
 console.log(`📦 App: ${app.name}`)
 console.log(`🌍 Stage: ${app.stage}`)
 console.log(`🗄️  D1 Database: ${database.name}`)
+console.log(`🪣 R2 Bucket: ${photosBucket.name}`)
 console.log(`🔄 Durable Object: ${durableObject.className}`)
 console.log(`⚡ Worker: ${worker.name}`)
 console.log(`🌐 URL: ${worker.url}`)

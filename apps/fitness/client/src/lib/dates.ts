@@ -42,3 +42,27 @@ export function monthLabel(year: number, month: number): string {
 export function monthLabelShort(year: number, month: number): string {
   return new Date(year, month, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 }
+
+/** Whole days from one local date key to another; negative if toKey is earlier. */
+export function daysBetween(fromKey: string, toKey: string): number {
+  const [fy, fm, fd] = fromKey.split('-').map(Number)
+  const [ty, tm, td] = toKey.split('-').map(Number)
+  return Math.round((new Date(ty, tm - 1, td).getTime() - new Date(fy, fm - 1, fd).getTime()) / 86400000)
+}
+
+/** Add days to a local date key. */
+export function addDays(key: string, days: number): string {
+  const [y, m, d] = key.split('-').map(Number)
+  return toDateKey(new Date(y, m - 1, d + days))
+}
+
+/**
+ * Chart x-axis label. Short spans get 'Aug 14'; longer ones get "Aug '25", since
+ * a 1-year window would otherwise show the same 'Aug 14' twice.
+ */
+export function formatAxis(key: string, spanDays: number): string {
+  if (spanDays <= 200) return formatShort(key)
+  const [y, m] = key.split('-').map(Number)
+  const mon = new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'short' })
+  return `${mon} '${String(y).slice(2)}`
+}

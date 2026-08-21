@@ -1,35 +1,59 @@
 /**
- * Weight tab: current weight + entry input on top, 3-month trend chart with
- * goal line and stats below. All values in kg.
+ * Weight tab: current weight + entry input on top, a range-selectable trend
+ * chart with goal line and stats in the middle, full entry log at the bottom.
+ * The range chips scope only the Progress card — the current-weight hero and
+ * the entry log always reflect the complete history. All values
+ * in kg. Progress photos are attached afterwards from the entry log.
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavPills, TopBar } from '../components/Chrome'
 import { WeightChart } from '../components/WeightChart'
+import { WeightLog } from '../components/WeightLog'
 import { useWeights } from '../hooks/useAppData'
 import { useLocalFirstAuth } from '../hooks/useLocalFirstAuth'
-import { logWeight } from '../lib/api'
+import { deleteWeight, logWeight } from '../lib/api'
 import { GOAL_KG } from '../lib/constants'
 import { formatShort, todayKey } from '../lib/dates'
+import { getRange, RANGE_OPTIONS, type RangeKey } from '../lib/period'
+import type { WeightEntry } from '../lib/types'
 import { deriveWeightStats } from '../lib/weight-math'
 
 export function Weight() {
   const { getProfileJwt } = useLocalFirstAuth()
   const { entries, error: fetchError } = useWeights()
   const [input, setInput] = useState('')
+  // Scopes the Progress card only; every range ends at today
+  const [rangeKey, setRangeKey] = useState<RangeKey>('3m')
   const [savedFor, setSavedFor] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   // Optimistic overlay: today's just-logged value until the refetch lands
-  const [pending, setPending] = useState<{ date: string; kg: number } | null>(null)
+  const [pending, setPending] = useState<WeightEntry | null>(null)
+  // Optimistic removals, likewise cleared once the refetch reflects them
+  const [deletedDates, setDeletedDates] = useState<Set<string>>(new Set())
+
+  // Drop each optimistic overlay as soon as the server data agrees with it
+  useEffect(() => {
+    if (!entries) return
+    setPending((p) =>
+      p && entries.some((e) => e.date === p.date && e.kg === p.kg && e.photoId === p.photoId) ? null : p,
+    )
+    setDeletedDates((dates) => {
+      if (dates.size === 0) return dates
+      const next = new Set([...dates].filter((date) => entries.some((e) => e.date === date)))
+      return next.size === dates.size ? dates : next
+    })
+  }, [entries])
 
   const merged = (() => {
-    const list = entries ?? []
+    const list = (entries ?? []).filter((e) => !deletedDates.has(e.date))
     if (!pending) return list
     const without = list.filter((e) => e.date !== pending.date)
     return [...without, pending].sort((a, b) => (a.date < b.date ? -1 : 1))
   })()
 
-  const stats = deriveWeightStats(merged)
+  const range = getRange(rangeKey, merged[0]?.date ?? null)
+  const stats = deriveWeightStats(merged, range)
 
   const save = async () => {
     const kg = Math.round(parseFloat(input) * 10) / 10
@@ -38,7 +62,7 @@ export function Weight() {
       return
     }
     const date = todayKey()
-    setPending({ date, kg })
+    setPending({ date, kg, photoId: null })
     setSaveError(null)
     try {
       await logWeight(getProfileJwt, date, kg)
@@ -49,6 +73,23 @@ export function Weight() {
       setSaveError(err instanceof Error ? err.message : 'Could not save — try again')
     }
   }
+
+  const handleDelete = async (date: string) => {
+    setDeletedDates((dates) => new Set(dates).add(date))
+    try {
+      await deleteWeight(getProfileJwt, date)
+    } catch (err) {
+      setDeletedDates((dates) => {
+        const next = new Set(dates)
+        next.delete(date)
+        return next
+      })
+      throw err
+    }
+  }
+
+  const handleAttachPhoto = (date: string, kg: number, newPhotoId: string) =>
+    logWeight(getProfileJwt, date, kg, newPhotoId).then(() => undefined)
 
   const losing = stats.deltaKg !== null && stats.deltaKg >= 0
 
@@ -110,12 +151,39 @@ export function Weight() {
         </section>
 
         <section className="card">
-          <div className="flex items-baseline justify-between mb-3.5">
+          <div className="flex items-center justify-between gap-3 mb-1">
             <div className="card-title">Progress</div>
-            <div className="card-sub">{stats.windowLabel}</div>
+            <div
+              className="flex items-center gap-0.5 rounded-full bg-chip p-[3px]"
+              role="group"
+              aria-label="Chart range"
+            >
+              {RANGE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => setRangeKey(opt.key)}
+                  aria-pressed={rangeKey === opt.key}
+                  className={`text-[12px] font-semibold rounded-full px-3 py-1 transition-colors ${
+                    rangeKey === opt.key
+                      ? 'bg-white text-ink border border-line'
+                      : 'text-ink-3 hover:text-ink'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
+          <div className="card-sub mb-3.5">{stats.windowLabel}</div>
           <div className="mt-1.5">
-            <WeightChart entries={stats.windowEntries} goal={GOAL_KG} />
+            <WeightChart
+              entries={stats.windowEntries}
+              goal={GOAL_KG}
+              fromKey={range.fromKey}
+              toKey={range.toKey}
+              emptyMessage={merged.length ? 'No weigh-ins in this range.' : undefined}
+            />
           </div>
           <div className="flex gap-[18px] mt-3.5 pt-3 border-t border-line-2">
             <div>
@@ -152,6 +220,8 @@ export function Weight() {
           </div>
           {fetchError && <div className="mt-3 text-[0.78rem] text-down">{fetchError}</div>}
         </section>
+
+        <WeightLog entries={merged} onDelete={handleDelete} onAttachPhoto={handleAttachPhoto} />
       </div>
     </>
   )

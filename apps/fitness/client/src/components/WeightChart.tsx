@@ -1,11 +1,13 @@
 /**
- * SVG weight trend line for the 3-month window: adaptive integer-ish
+ * SVG weight trend line for the selected range: adaptive integer-ish
  * gridlines, dashed goal line, soft area fill, and a dot on the last point.
  * The y-domain always includes the goal so the dashed line stays visible.
+ * The x-axis is a true date scale — a month-long gap reads as a long flat
+ * stretch, not as one evenly-spaced hop.
  */
 
 import type { WeightEntry } from '../lib/types'
-import { formatShort } from '../lib/dates'
+import { addDays, daysBetween, formatAxis } from '../lib/dates'
 
 const W = 360
 const H = 170
@@ -17,11 +19,23 @@ const PAD_B = 24
 const LINE_COLOR = '#5FA8A0' // bike teal
 const GOAL_COLOR = '#93B88B' // stretch sage
 
-export function WeightChart({ entries, goal }: { entries: WeightEntry[]; goal: number }) {
+export function WeightChart({
+  entries,
+  goal,
+  fromKey,
+  toKey,
+  emptyMessage = 'Log your first weight to see the trend.',
+}: {
+  entries: WeightEntry[]
+  goal: number
+  fromKey: string
+  toKey: string
+  emptyMessage?: string
+}) {
   if (entries.length === 0) {
     return (
       <div className="h-[120px] flex items-center justify-center rounded-2xl border border-dashed border-line-btn text-[13px] text-faint">
-        Log your first weight to see the trend.
+        {emptyMessage}
       </div>
     )
   }
@@ -37,16 +51,27 @@ export function WeightChart({ entries, goal }: { entries: WeightEntry[]; goal: n
   const gridVals: number[] = []
   for (let g = Math.ceil(min / step) * step; g <= max; g += step) gridVals.push(Math.round(g * 10) / 10)
 
-  const x = (i: number) => PAD_L + (entries.length === 1 ? 0.5 : i / (entries.length - 1)) * (W - PAD_L - PAD_R)
+  // Extend the domain past today if an entry is dated ahead of it (the log
+  // endpoint allows today+1), so no point falls off the right edge.
+  const lastKey = entries[entries.length - 1].date
+  const domainTo = lastKey > toKey ? lastKey : toKey
+  const totalDays = Math.max(1, daysBetween(fromKey, domainTo))
+
+  const x = (key: string) => PAD_L + (daysBetween(fromKey, key) / totalDays) * (W - PAD_L - PAD_R)
   const y = (v: number) => PAD_T + (1 - (v - min) / (max - min)) * (H - PAD_T - PAD_B)
 
-  const linePath = vals.map((v, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(v)}`).join(' ')
-  const areaPath = `${linePath} L ${x(vals.length - 1)} ${H - PAD_B} L ${x(0)} ${H - PAD_B} Z`
+  const linePath = entries.map((e, i) => `${i === 0 ? 'M' : 'L'} ${x(e.date)} ${y(e.kg)}`).join(' ')
+  const areaPath = `${linePath} L ${x(lastKey)} ${H - PAD_B} L ${x(entries[0].date)} ${H - PAD_B} Z`
 
   const n = entries.length
-  const labelIdx = [...new Set([0, Math.round((n - 1) / 3), Math.round(((n - 1) * 2) / 3), n - 1])]
+  const last = entries[n - 1]
 
-  const last = n - 1
+  // Four labels evenly spaced across the *domain*, not across entry indices
+  const labels = [0, 1, 2, 3].map((i) => {
+    const key = addDays(fromKey, Math.round((totalDays * i) / 3))
+    const anchor = i === 0 ? 'start' : i === 3 ? 'end' : 'middle'
+    return { key, anchor: anchor as 'start' | 'end' | 'middle' }
+  })
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto block" role="img" aria-label="Weight trend chart">
@@ -99,20 +124,20 @@ export function WeightChart({ entries, goal }: { entries: WeightEntry[]; goal: n
           strokeLinecap="round"
         />
       )}
-      <circle cx={x(last)} cy={y(vals[last])} r={4.5} fill={LINE_COLOR} stroke="#fff" strokeWidth={2} />
+      <circle cx={x(last.date)} cy={y(last.kg)} r={4.5} fill={LINE_COLOR} stroke="#fff" strokeWidth={2} />
 
-      {labelIdx.map((i) => (
+      {labels.map(({ key, anchor }) => (
         <text
-          key={i}
-          x={x(i)}
+          key={key}
+          x={x(key)}
           y={H - 8}
-          textAnchor="middle"
+          textAnchor={anchor}
           fontSize={9}
           fill="var(--color-ink-3)"
           fontFamily='"DM Mono", monospace'
           fontWeight={500}
         >
-          {formatShort(entries[i].date)}
+          {formatAxis(key, totalDays)}
         </text>
       ))}
     </svg>

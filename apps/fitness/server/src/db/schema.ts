@@ -47,6 +47,8 @@ export const weightEntries = sqliteTable('weight_entries', {
   did: text('did').notNull(),
   date: text('date').notNull(), // user-local 'YYYY-MM-DD'
   kg: real('kg').notNull(),
+  // uuid; R2 keys derived as photos/<id>/(full|thumb).jpg
+  photoId: text('photo_id'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
 }, (table) => [

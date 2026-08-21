@@ -17,6 +17,7 @@ import * as WeightEntryModel from './db/models/weightEntries'
 import { ACTIVITY_KEYS, type ActivityKey } from './db/schema'
 import { decodeAndVerifyJWT } from '@home/fitness-shared'
 import { AuthError, authFromBody } from './auth'
+import { PHOTO_KEY_RE, canPresign, deletePhoto, photoKeys, uploadUrlFor } from './r2'
 
 // The app is served under /<slug>/ on the shared domain; basePath keeps every
 // handler's route written as /api/* while matching /<slug>/api/* on the wire.
@@ -307,6 +308,10 @@ app.post('/api/weights/list', async (c) => {
 
 /**
  * POST /api/weights/log - Upsert a user's weight for one day, in kg (members only)
+ *
+ * `photoId` is optional and tri-state: omit it to keep the day's existing
+ * photo, pass a uuid to attach one (both R2 objects must already exist), or
+ * pass null to clear it. A superseded photo's objects are deleted.
  */
 app.post('/api/weights/log', async (c) => {
   try {
@@ -317,8 +322,35 @@ app.post('/api/weights/log', async (c) => {
       ? Math.round(body.kg * 10) / 10
       : NaN
     if (!(kg >= 30 && kg <= 250)) return c.json({ error: 'Weight must be between 30 and 250 kg' }, 400)
+
+    // undefined = keep whatever the row has; null = clear; string = set
+    let photoId: string | null | undefined
+    if (body.photoId === null) {
+      photoId = null
+    } else if (typeof body.photoId === 'string') {
+      photoId = body.photoId
+    } else if (body.photoId !== undefined) {
+      return c.json({ error: 'Invalid photoId' }, 400)
+    }
+
     const { db, user } = await authFromBody(c, body)
-    const entry = await WeightEntryModel.upsertEntry(db, user.did, date, kg)
+
+    if (typeof photoId === 'string') {
+      const { fullKey, thumbKey } = photoKeys(photoId)
+      if (!PHOTO_KEY_RE.test(fullKey)) return c.json({ error: 'Invalid photoId' }, 400)
+      const [full, thumb] = await Promise.all([
+        c.env.PHOTOS_BUCKET.head(fullKey),
+        c.env.PHOTOS_BUCKET.head(thumbKey),
+      ])
+      if (!full || !thumb) return c.json({ error: 'Photo upload incomplete — try the photo again' }, 400)
+    }
+
+    // Read the stored photo before the upsert so a replaced one can be purged
+    const previous = photoId === undefined ? null : await WeightEntryModel.getEntry(db, user.did, date)
+    const entry = await WeightEntryModel.upsertEntry(db, user.did, date, kg, photoId)
+    if (previous?.photoId && previous.photoId !== entry.photoId) {
+      await deletePhoto(c.env, c.req.url, previous.photoId)
+    }
     await notifyDO(c, 'weight-logged', { did: user.did, date })
     return c.json({ entry })
   } catch (error) {
@@ -326,6 +358,95 @@ app.post('/api/weights/log', async (c) => {
     console.error('Error logging weight:', error)
     return c.json({ error: 'Failed to log weight', message: (error as Error).message }, 500)
   }
+})
+
+/**
+ * POST /api/weights/delete - Remove the caller's entry for one day, and its
+ * progress photo if it had one (members only)
+ */
+app.post('/api/weights/delete', async (c) => {
+  try {
+    const body = await c.req.json()
+    if (typeof body.date !== 'string' || !DATE_KEY_RE.test(body.date)) {
+      return c.json({ error: 'Invalid date' }, 400)
+    }
+    const { db, user } = await authFromBody(c, body)
+    // Scoped to the verified DID — a caller can only ever delete their own row
+    const deleted = await WeightEntryModel.deleteEntry(db, user.did, body.date)
+    if (!deleted) return c.json({ error: 'No entry for that date' }, 404)
+    if (deleted.photoId) await deletePhoto(c.env, c.req.url, deleted.photoId)
+    await notifyDO(c, 'weight-deleted', { did: user.did, date: body.date })
+    return c.json({ success: true })
+  } catch (error) {
+    if (error instanceof AuthError) return c.json({ error: error.message }, error.status)
+    console.error('Error deleting weight:', error)
+    return c.json({ error: 'Failed to delete weight', message: (error as Error).message }, 500)
+  }
+})
+
+// ---------------------------------------------------------------------------
+// Photos — presigned direct-to-R2 uploads in prod, worker fallback in dev
+// ---------------------------------------------------------------------------
+
+/**
+ * POST /api/request-upload - Mint a photoId + PUT URLs for full + thumb
+ */
+app.post('/api/request-upload', async (c) => {
+  try {
+    const body = await c.req.json()
+    await authFromBody(c, body)
+    const photoId = crypto.randomUUID()
+    const { fullKey, thumbKey } = photoKeys(photoId)
+    const [fullUrl, thumbUrl] = await Promise.all([
+      uploadUrlFor(c.env, fullKey),
+      uploadUrlFor(c.env, thumbKey),
+    ])
+    return c.json({ photoId, fullUrl, thumbUrl })
+  } catch (error) {
+    if (error instanceof AuthError) return c.json({ error: error.message }, error.status)
+    console.error('Error requesting upload:', error)
+    return c.json({ error: 'Failed to request upload', message: (error as Error).message }, 500)
+  }
+})
+
+/**
+ * PUT /api/dev-upload/* - Dev-only byte sink into the local simulated
+ * bucket; self-disables when presigning is configured (prod)
+ */
+app.put('/api/dev-upload/*', async (c) => {
+  if (canPresign(c.env)) return c.json({ error: 'Not found' }, 404)
+  const key = decodeURIComponent(c.req.path.replace('/fitness/api/dev-upload/', ''))
+  if (!PHOTO_KEY_RE.test(key)) return c.json({ error: 'Invalid key' }, 400)
+  await c.env.PHOTOS_BUCKET.put(key, c.req.raw.body, {
+    httpMetadata: { contentType: c.req.header('content-type') ?? 'image/jpeg' },
+  })
+  return c.json({ ok: true })
+})
+
+/**
+ * GET /api/img/* - Serve photos from R2 with a year-long immutable edge
+ * cache. Public by unguessable UUID key, so a plain <img src> works.
+ */
+app.get('/api/img/*', async (c) => {
+  const key = decodeURIComponent(c.req.path.replace('/fitness/api/img/', ''))
+  if (!PHOTO_KEY_RE.test(key)) return c.json({ error: 'Not found' }, 404)
+
+  const cache = caches.default
+  const cached = await cache.match(c.req.raw)
+  if (cached) return cached
+
+  const obj = await c.env.PHOTOS_BUCKET.get(key)
+  if (!obj) return c.json({ error: 'Not found' }, 404)
+
+  const res = new Response(obj.body, {
+    headers: {
+      'Content-Type': obj.httpMetadata?.contentType ?? 'image/jpeg',
+      'ETag': obj.httpEtag,
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    },
+  })
+  c.executionCtx.waitUntil(cache.put(c.req.raw, res.clone()))
+  return res
 })
 
 /**

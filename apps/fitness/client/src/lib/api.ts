@@ -54,5 +54,23 @@ export const logActivities = (getJwt: GetJwt, date: string, activities: Activity
 export const listWeights = (getJwt: GetJwt) =>
   post<{ entries: WeightEntry[] }>(getJwt, 'weights/list').then((r) => r.entries)
 
-export const logWeight = (getJwt: GetJwt, date: string, kg: number) =>
-  post<{ entry: WeightEntry }>(getJwt, 'weights/log', { date, kg }).then((r) => r.entry)
+/**
+ * Upsert one day's weight. `photoId` is tri-state, matching the endpoint:
+ * omit to keep the day's existing photo, a uuid to attach one, null to clear.
+ */
+export const logWeight = (getJwt: GetJwt, date: string, kg: number, photoId?: string | null) =>
+  post<{ entry: WeightEntry }>(getJwt, 'weights/log', {
+    date,
+    kg,
+    ...(photoId === undefined ? {} : { photoId }),
+  }).then((r) => r.entry)
+
+export const deleteWeight = (getJwt: GetJwt, date: string) =>
+  post<{ success: boolean }>(getJwt, 'weights/delete', { date })
+
+export const requestUpload = (getJwt: GetJwt) =>
+  post<{ photoId: string; fullUrl: string; thumbUrl: string }>(getJwt, 'request-upload')
+
+/** Photo URL from its id — ids live in D1, URLs are derived here. */
+export const imgUrl = (photoId: string, size: 'full' | 'thumb') =>
+  api(`img/photos/${photoId}/${size}.jpg`)
