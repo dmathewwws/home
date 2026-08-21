@@ -16,6 +16,7 @@ import {
   type Meal,
   type RecipeCard,
   type RecipeSwap,
+  type RecipeVariation,
   type SourceType,
 } from './types'
 
@@ -26,6 +27,7 @@ const URL_MAX = 500
 const MAX_CARDS = 24
 const MAX_INGREDIENTS = 40
 const MAX_SWAPS = 12
+const MAX_VARIATIONS = 12
 
 export class ImportJsonError extends Error {}
 
@@ -148,7 +150,20 @@ export function parseImportJson(raw: string): ImportDraft {
     return { ingredient, replacement }
   })
 
-  return { title, meal, minutes, source, ingredients, cards, swaps }
+  const variationsRaw = doc.variations ?? []
+  if (!Array.isArray(variationsRaw)) fail('variations must be an array')
+  if (variationsRaw.length > MAX_VARIATIONS) fail(`Too many variations (max ${MAX_VARIATIONS})`)
+  const variations: RecipeVariation[] = variationsRaw.map((variation, i) => {
+    if (!isRecord(variation) || typeof variation.name !== 'string' || !variation.name.trim()) {
+      fail(`variations[${i}].name is required`)
+    }
+    const name = variation.name.trim()
+    if (name.length > 40) fail(`variations[${i}].name is too long (max 40 characters)`)
+    const detail = optionalString(variation.detail, `variations[${i}].detail`, 200) ?? ''
+    return { name, detail }
+  })
+
+  return { title, meal, minutes, source, ingredients, cards, swaps, variations }
 }
 
 /** Compact format reminder for the "Copy the format" button. */
@@ -171,5 +186,8 @@ export const IMPORT_FORMAT_SNIPPET = `{
   ],
   "swaps": [
     { "ingredient": "Honey", "replacement": "Maple syrup" }
+  ],
+  "variations": [
+    { "name": "Chocolate", "detail": "1 tbsp cocoa in the base + dark chips on top" }
   ]
 }`

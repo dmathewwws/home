@@ -12,7 +12,8 @@ import {
   VERDICTS,
   type RecipeCard,
   type RecipeSwap,
-  type RecipeSecondarySource,
+  type RecipeSource,
+  type RecipeVariation,
 } from './db/schema'
 import type { RecipeInput, RecipeIngredientInput } from './db/models/recipes'
 import type { ReflectionInput } from './db/models/reflections'
@@ -23,7 +24,9 @@ const TEXT_MAX = 2000
 const MAX_CARDS = 24
 const MAX_INGREDIENTS = 40
 const MAX_SWAPS = 12
-const MAX_SECONDARY_SOURCES = 6
+const MAX_SOURCES = 6
+const MAX_VARIATIONS = 12
+const VARIATION_NAME_MAX = 40
 
 export class ValidationError extends Error {}
 
@@ -102,20 +105,31 @@ export function validateRecipeInput(raw: unknown): RecipeInput {
     return { ingredient: swap.ingredient.trim().slice(0, 80), replacement: swap.replacement.trim().slice(0, 200) }
   })
 
-  const secondaryRaw = raw.secondarySources ?? []
-  if (!Array.isArray(secondaryRaw)) fail('secondarySources must be an array')
-  if (secondaryRaw.length > MAX_SECONDARY_SOURCES) fail(`Too many secondary sources (max ${MAX_SECONDARY_SOURCES})`)
-  const secondarySources: RecipeSecondarySource[] = secondaryRaw.map((source, i) => {
+  const variationsRaw = raw.variations ?? []
+  if (!Array.isArray(variationsRaw)) fail('variations must be an array')
+  if (variationsRaw.length > MAX_VARIATIONS) fail(`Too many variations (max ${MAX_VARIATIONS})`)
+  const variations: RecipeVariation[] = variationsRaw.map((variation, i) => {
+    if (!isRecord(variation) || typeof variation.name !== 'string' || !variation.name.trim()) {
+      fail(`Variation ${i + 1} needs a name`)
+    }
+    const detail = typeof variation.detail === 'string' ? variation.detail.trim() : ''
+    return { name: variation.name.trim().slice(0, VARIATION_NAME_MAX), detail: detail.slice(0, 200) }
+  })
+
+  const notesRaw = raw.notes ?? ''
+  if (typeof notesRaw !== 'string') fail('notes must be text')
+  const notes = notesRaw.trim().slice(0, TEXT_MAX)
+
+  const sourcesRaw = raw.sources ?? []
+  if (!Array.isArray(sourcesRaw)) fail('sources must be an array')
+  if (sourcesRaw.length > MAX_SOURCES) fail(`Too many sources (max ${MAX_SOURCES})`)
+  const sources: RecipeSource[] = sourcesRaw.map((source, i) => {
     if (!isRecord(source) || typeof source.url !== 'string' || !source.url.trim()) {
-      fail(`Secondary source ${i + 1} needs a link`)
+      fail(`Source ${i + 1} needs a link`)
     }
-    if (typeof source.label !== 'string' || !source.label.trim()) {
-      fail(`Secondary source ${i + 1} needs a label (who it's from)`)
-    }
-    const notesRaw = source.notes ?? ''
-    if (typeof notesRaw !== 'string') fail(`Secondary source ${i + 1} notes must be text`)
-    const notes = notesRaw.trim().slice(0, TEXT_MAX)
-    return { url: source.url.trim().slice(0, 500), label: source.label.trim().slice(0, 200), notes }
+    const url = source.url.trim().slice(0, 500)
+    const label = optionalTrimmed(source.label, `Source ${i + 1} label`, 200)
+    return label ? { url, label } : { url }
   })
 
   return {
@@ -130,7 +144,9 @@ export function validateRecipeInput(raw: unknown): RecipeInput {
     ingredients: ingredientInputs,
     cards,
     swaps,
-    secondarySources,
+    variations,
+    notes,
+    sources,
   }
 }
 
@@ -152,6 +168,7 @@ export function validateReflectionInput(raw: unknown): ReflectionInput {
     verdict: raw.verdict as ReflectionInput['verdict'],
     note: optionalTrimmed(raw.note, 'note', TEXT_MAX),
     changeNextTime: optionalTrimmed(raw.changeNextTime, 'changeNextTime', 500),
+    variation: optionalTrimmed(raw.variation, 'variation', VARIATION_NAME_MAX),
     minutes,
     photoId: optionalTrimmed(raw.photoId, 'photoId', 60),
   }

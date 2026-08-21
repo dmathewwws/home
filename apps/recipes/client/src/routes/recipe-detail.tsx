@@ -78,12 +78,7 @@ export function RecipeDetail() {
       />
       <div className="page-col px-5 pb-16">
         <h1 className="h-display text-[clamp(34px,10vw,42px)]">{recipe.title}</h1>
-        {recipe.sourceType === 'video' && recipe.sourceUrl ? (
-          <a className="mono-link inline-block mt-3.5" href={recipe.sourceUrl} target="_blank" rel="noreferrer">
-            Youtube{recipe.sourceAuthor ? ` · ${recipe.sourceAuthor}` : ''}
-            {recipe.sourceDetail ? ` · ${recipe.sourceDetail}` : ''} &rarr;
-          </a>
-        ) : (
+        {!(recipe.sourceType === 'video' && recipe.sourceUrl) && (
           <div className="rec-meta mt-3.5">
             <span className={recipe.sourceType === 'book' ? 'src src-book' : 'src src-mine'} />
             {recipe.sourceType === 'book'
@@ -139,6 +134,18 @@ export function RecipeDetail() {
           </ol>
         </div>
 
+        {recipe.variations.length > 0 && (
+          <div className="my-[26px] border-t border-rule pt-[13px]">
+            <em className="eyebrow not-italic !text-[10px] block mb-2">Variations</em>
+            {recipe.variations.map((variation, i) => (
+              <div key={i} className="flex gap-[9px] items-baseline py-1 text-[14.5px]">
+                <span className="font-mono2 text-[11px] text-muted">{variation.name}</span>
+                <span>{variation.detail}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {recipe.swaps.length > 0 && (
           <div className="my-[26px] border-t border-rule pt-[13px]">
             <em className="eyebrow not-italic !text-[10px] block mb-2">If you're out</em>
@@ -151,19 +158,29 @@ export function RecipeDetail() {
           </div>
         )}
 
-        {recipe.secondarySources.length > 0 && (
+        {recipe.notes && (
           <div className="my-[26px] border-t border-rule pt-[13px]">
-            <em className="eyebrow not-italic !text-[10px] block mb-2">Also see</em>
-            {recipe.secondarySources.map((source, i) => (
+            <em className="eyebrow not-italic !text-[10px] block mb-2">Notes</em>
+            <p className="text-[14.5px] leading-[1.42] whitespace-pre-line">{recipe.notes}</p>
+          </div>
+        )}
+
+        {((recipe.sourceType === 'video' && recipe.sourceUrl) || recipe.sources.length > 0) && (
+          <div className="my-[26px] border-t border-rule pt-[13px]">
+            <em className="eyebrow not-italic !text-[10px] block mb-2">Sources</em>
+            {recipe.sourceType === 'video' && recipe.sourceUrl && (
+              <div className="py-1.5">
+                <a className="mono-link" href={recipe.sourceUrl} target="_blank" rel="noreferrer">
+                  Youtube{recipe.sourceAuthor ? ` · ${recipe.sourceAuthor}` : ''}
+                  {recipe.sourceDetail ? ` · ${recipe.sourceDetail}` : ''} &rarr;
+                </a>
+              </div>
+            )}
+            {recipe.sources.map((source, i) => (
               <div key={i} className="py-1.5">
                 <a className="mono-link" href={source.url} target="_blank" rel="noreferrer">
-                  {source.label} &rarr;
+                  {source.label ?? source.url} &rarr;
                 </a>
-                {source.notes && (
-                  <p className="pl-3.5 pt-1 text-[14.5px] leading-[1.42] whitespace-pre-line">
-                    {source.notes}
-                  </p>
-                )}
               </div>
             ))}
           </div>

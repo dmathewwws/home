@@ -9,8 +9,9 @@ import { useNavigate } from 'react-router-dom'
 import { BackButton, SaveBar, TopBar } from '../components/Chrome'
 import { CardEditor } from '../components/CardEditor'
 import { IngredientPicker, type PickedIngredient } from '../components/IngredientPicker'
-import { SecondarySourceEditor } from '../components/SecondarySourceEditor'
+import { SourcesEditor } from '../components/SourcesEditor'
 import { SwapEditor } from '../components/SwapEditor'
+import { VariationEditor } from '../components/VariationEditor'
 import { useLocalFirstAuth } from '../hooks/useLocalFirstAuth'
 import * as api from '../lib/api'
 import {
@@ -19,8 +20,9 @@ import {
   type Meal,
   type RecipeCard,
   type RecipeFull,
-  type RecipeSecondarySource,
+  type RecipeSource,
   type RecipeSwap,
+  type RecipeVariation,
 } from '../lib/types'
 import { MEAL_LABELS } from '../lib/format'
 
@@ -53,7 +55,9 @@ export function RecipeForm({ initial, recipeId }: RecipeFormProps) {
   )
   const [cards, setCards] = useState<RecipeCard[]>(initial?.cards.length ? initial.cards : [{ text: '' }])
   const [swaps, setSwaps] = useState<RecipeSwap[]>(initial?.swaps ?? [])
-  const [secondarySources, setSecondarySources] = useState<RecipeSecondarySource[]>(initial?.secondarySources ?? [])
+  const [variations, setVariations] = useState<RecipeVariation[]>(initial?.variations ?? [])
+  const [notes, setNotes] = useState(initial?.notes ?? '')
+  const [sources, setSources] = useState<RecipeSource[]>(initial?.sources ?? [])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -86,7 +90,9 @@ export function RecipeForm({ initial, recipeId }: RecipeFormProps) {
         ),
         cards: filledCards.map((c) => ({ text: c.text.trim(), ...(c.timer?.trim() ? { timer: c.timer.trim() } : {}) })),
         swaps,
-        secondarySources,
+        variations,
+        notes: notes.trim(),
+        sources,
       }
       if (recipeId) {
         await api.updateRecipe(getProfileJwt, recipeId, draft)
@@ -179,20 +185,39 @@ export function RecipeForm({ initial, recipeId }: RecipeFormProps) {
           </div>
 
           <div className="my-[26px]">
+            <span className="tape mb-3.5">Variations</span>
+            <div className="mt-2">
+              <VariationEditor variations={variations} onChange={setVariations} />
+            </div>
+          </div>
+
+          <div className="my-[26px]">
             <span className="tape mb-3.5">If you're out</span>
             <div className="mt-2">
               <SwapEditor swaps={swaps} onChange={setSwaps} />
             </div>
           </div>
 
-          {editing && (
-            <div className="my-[26px]">
-              <span className="tape mb-3.5">Secondary sources</span>
-              <div className="mt-2">
-                <SecondarySourceEditor sources={secondarySources} onChange={setSecondarySources} />
-              </div>
+          <div className="my-[26px]">
+            <span className="tape mb-3.5">Notes</span>
+            <div className="mt-2">
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={Math.max(4, notes.split('\n').length)}
+                placeholder="Anything worth remembering about this recipe"
+                aria-label="Recipe notes"
+                className="w-full bg-kraft-lift border border-rule px-2.5 py-1.5 text-[14px] leading-[1.42] placeholder:text-rule outline-none resize-none"
+              />
             </div>
-          )}
+          </div>
+
+          <div className="my-[26px]">
+            <span className="tape mb-3.5">Sources</span>
+            <div className="mt-2">
+              <SourcesEditor sources={sources} onChange={setSources} />
+            </div>
+          </div>
 
           {error && <p className="text-sear text-[14px] mb-4">{error}</p>}
         </div>

@@ -32,6 +32,7 @@ export function NewReflection() {
   const [picking, setPicking] = useState(false)
   const [pickQuery, setPickQuery] = useState('')
   const [photoId, setPhotoId] = useState<string | null>(null)
+  const [variation, setVariation] = useState<string | null>(null)
   const [verdict, setVerdict] = useState<Verdict | null>(null)
   const [note, setNote] = useState('')
   const [changeNextTime, setChangeNextTime] = useState('')
@@ -58,6 +59,7 @@ export function NewReflection() {
         verdict,
         note: note.trim() || null,
         changeNextTime: changeNextTime.trim() || null,
+        variation,
         minutes,
         photoId,
       })
@@ -111,6 +113,7 @@ export function NewReflection() {
                     type="button"
                     onClick={() => {
                       setRecipeId(r.id)
+                      setVariation(null)
                       setPicking(false)
                       setPickQuery('')
                     }}
@@ -123,6 +126,26 @@ export function NewReflection() {
                 ))}
                 {pickable.length === 0 && <p className="text-[13px] text-muted py-2">Nothing in the box matches.</p>}
               </div>
+            </div>
+          )}
+
+          {recipe && recipe.variations.length > 0 && (
+            <div className="my-[26px]">
+              <span className="tape mb-3.5">Which version?</span>
+              <div className="flex flex-wrap gap-[9px] mt-2">
+                {recipe.variations.map((v) => (
+                  <button
+                    key={v.name}
+                    type="button"
+                    aria-pressed={variation === v.name}
+                    onClick={() => setVariation(variation === v.name ? null : v.name)}
+                    className="chip aria-pressed:bg-ink aria-pressed:!text-kraft aria-pressed:!border-ink"
+                  >
+                    {v.name}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[14px] text-muted leading-normal mt-2">Leave them all off if it was just the base.</p>
             </div>
           )}
 

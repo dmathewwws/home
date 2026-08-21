@@ -16,6 +16,7 @@ export interface ReflectionListItem {
   verdict: Verdict
   note: string | null
   changeNextTime: string | null
+  variation: string | null
   minutes: number | null
   rep: number
   photoId: string | null
@@ -36,6 +37,7 @@ export async function listReflections(db: Database): Promise<ReflectionListItem[
       verdict: reflections.verdict,
       note: reflections.note,
       changeNextTime: reflections.changeNextTime,
+      variation: reflections.variation,
       minutes: reflections.minutes,
       rep: reflections.rep,
       photoId: reflections.photoId,
@@ -60,6 +62,7 @@ export interface ReflectionInput {
   verdict: Verdict
   note?: string | null
   changeNextTime?: string | null
+  variation?: string | null
   minutes?: number | null
   photoId?: string | null
 }
@@ -90,6 +93,7 @@ export async function createReflection(
       verdict: input.verdict,
       note: input.note ?? null,
       changeNextTime: input.changeNextTime ?? null,
+      variation: input.variation ?? null,
       minutes: input.minutes ?? null,
       rep: count + 1,
       photoId: input.photoId ?? null,

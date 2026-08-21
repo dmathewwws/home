@@ -35,6 +35,9 @@ authority on limits is `server/src/validation.ts`.
   ],
   "swaps": [
     { "ingredient": "Honey", "replacement": "Maple syrup" }
+  ],
+  "variations": [
+    { "name": "Extra crispy", "detail": "double-fry: rest 5 min after the first fry, then fry again" }
   ]
 }
 ```
@@ -66,6 +69,9 @@ everything else has a default.
 | `swaps` | no | `[]` | ≤12 items |
 | `swaps[].ingredient` | yes | — | ≤80 chars; the thing you might be out of |
 | `swaps[].replacement` | yes | — | ≤200 chars |
+| `variations` | no | `[]` | ≤12 items |
+| `variations[].name` | yes | — | ≤40 chars; a short label ("Chocolate", "Berry") |
+| `variations[].detail` | no | `""` | ≤200 chars; what changes vs. the base |
 
 ## Semantics
 
@@ -78,7 +84,8 @@ everything else has a default.
 - **Markdown code fences are stripped** — pasting a ```` ```json ```` block
   straight from a chat works.
 - `source.type: "video"` renders the "Youtube" attribution label on the recipe
-  list and detail screens, with `source.url` as the link.
+  list, with `source.url` as the link. On the detail screen it appears as the
+  first entry of the **Sources** section.
 
 ## Prompt guidance for an LLM producing this JSON
 
@@ -95,6 +102,11 @@ everything else has a default.
 >   (dry goods, oils, sauces, spices). Names singular and capitalized. Include
 >   `amount` as spoken. Mark `"maybe": true` for anything mentioned only in
 >   passing or clearly optional.
+> - If the source presents flavour variations of one base recipe (overnight
+>   oats five ways, one dressing with three finishes), keep ONE set of cards
+>   for the base and list each take under `variations` — name + what changes —
+>   rather than duplicating cards. `swaps` stays for out-of-stock
+>   substitutions only.
 > - `title`: the dish, short and appetising, not the video's clickbait title.
 > - `minutes`: realistic active time at the stove, not the video length.
 > - `source`: type `"video"`, the video URL, the channel name as `author`, the

@@ -44,11 +44,16 @@ export interface RecipeSwap {
   replacement: string
 }
 
-/** A secondary source: another take on the dish (a pro chef's video, an article) with its tips. */
-export interface RecipeSecondarySource {
+/** A place to revisit this recipe: url plus an optional short label. */
+export interface RecipeSource {
   url: string
-  label: string // who/what it is: "Kenji López-Alt", "Serious Eats"
-  notes: string // free-text tips worth keeping from this source, newline-separated points
+  label?: string // "Kenji López-Alt", "Serious Eats"
+}
+
+/** A named variation of the base recipe: "Chocolate" → "1 tbsp cocoa + dark chips on top". */
+export interface RecipeVariation {
+  name: string
+  detail: string
 }
 
 export const recipes = sqliteTable('recipes', {
@@ -65,7 +70,9 @@ export const recipes = sqliteTable('recipes', {
   // order, so they live as JSON rather than extra tables.
   cards: text('cards').notNull(), // JSON RecipeCard[]
   swaps: text('swaps').notNull().default('[]'), // JSON RecipeSwap[]
-  secondarySources: text('secondary_sources').notNull().default('[]'), // JSON RecipeSecondarySource[]
+  variations: text('variations').notNull().default('[]'), // JSON RecipeVariation[]
+  notes: text('notes').notNull().default(''), // general free-text notes
+  sources: text('sources').notNull().default('[]'), // JSON RecipeSource[]
   createdBy: text('created_by').notNull(), // author DID (verified JWT iss)
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
@@ -102,6 +109,8 @@ export const reflections = sqliteTable('reflections', {
   verdict: text('verdict').notNull().$type<Verdict>(),
   note: text('note'), // "What happened"
   changeNextTime: text('change_next_time'), // the ONE thing — resurfaces on the recipe as "Last time"
+  // Snapshot of the variation *name* cooked (like recipeTitle: survives edits)
+  variation: text('variation'),
   minutes: integer('minutes'), // time at the stove
   // Snapshotted at insert (prior count + 1) so "rep 7" never renumbers if an
   // older reflection is deleted later.

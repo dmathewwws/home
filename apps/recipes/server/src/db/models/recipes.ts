@@ -14,7 +14,8 @@ import {
   type Recipe,
   type RecipeCard,
   type RecipeSwap,
-  type RecipeSecondarySource,
+  type RecipeSource,
+  type RecipeVariation,
   type Meal,
   type SourceType,
   type IngredientRole,
@@ -43,6 +44,9 @@ export interface RecipeListItem {
   createdBy: string
   createdAt: Date
   ingredients: RecipeChip[]
+  // On the list item (not just RecipeFull) so the reflection screen's recipe
+  // picker can offer variation chips without an extra fetch.
+  variations: RecipeVariation[]
   timesCooked: number
   lastCookedAt: Date | null
 }
@@ -50,7 +54,8 @@ export interface RecipeListItem {
 export interface RecipeFull extends RecipeListItem {
   cards: RecipeCard[]
   swaps: RecipeSwap[]
-  secondarySources: RecipeSecondarySource[]
+  notes: string
+  sources: RecipeSource[]
   lastReflection: {
     cookedAt: Date
     rep: number
@@ -78,7 +83,9 @@ export interface RecipeInput {
   ingredients: RecipeIngredientInput[]
   cards: RecipeCard[]
   swaps: RecipeSwap[]
-  secondarySources: RecipeSecondarySource[]
+  variations: RecipeVariation[]
+  notes: string
+  sources: RecipeSource[]
 }
 
 async function chipsForRecipes(db: Database, recipeIds: string[]): Promise<Map<string, RecipeChip[]>> {
@@ -145,6 +152,7 @@ function toListItem(
     createdBy: recipe.createdBy,
     createdAt: recipe.createdAt,
     ingredients: chips,
+    variations: JSON.parse(recipe.variations) as RecipeVariation[],
     timesCooked: stats?.timesCooked ?? 0,
     lastCookedAt: stats?.lastCookedAt ?? null,
   }
@@ -180,11 +188,8 @@ export async function getRecipeFull(db: Database, id: string): Promise<RecipeFul
     ...toListItem(recipe, chips.get(id) ?? [], stats.get(id)),
     cards: JSON.parse(recipe.cards) as RecipeCard[],
     swaps: JSON.parse(recipe.swaps) as RecipeSwap[],
-    // Tolerate pre-0007 rows where notes was still a string[].
-    secondarySources: (JSON.parse(recipe.secondarySources) as RecipeSecondarySource[]).map((s) => ({
-      ...s,
-      notes: Array.isArray(s.notes) ? s.notes.map((n) => `- ${n}`).join('\n') : s.notes,
-    })),
+    notes: recipe.notes,
+    sources: JSON.parse(recipe.sources) as RecipeSource[],
     lastReflection: latest
       ? {
           cookedAt: latest.cookedAt,
@@ -246,7 +251,9 @@ export async function createRecipe(db: Database, createdBy: string, input: Recip
     thumbUrl: input.thumbUrl ?? null,
     cards: JSON.stringify(input.cards),
     swaps: JSON.stringify(input.swaps),
-    secondarySources: JSON.stringify(input.secondarySources),
+    variations: JSON.stringify(input.variations),
+    notes: input.notes,
+    sources: JSON.stringify(input.sources),
     createdBy,
   })
   if (joinRows.length > 0) {
@@ -278,7 +285,9 @@ export async function updateRecipe(db: Database, id: string, input: RecipeInput)
         thumbUrl: input.thumbUrl ?? null,
         cards: JSON.stringify(input.cards),
         swaps: JSON.stringify(input.swaps),
-        secondarySources: JSON.stringify(input.secondarySources),
+        variations: JSON.stringify(input.variations),
+        notes: input.notes,
+        sources: JSON.stringify(input.sources),
         updatedAt: sql`(unixepoch())`,
       })
       .where(eq(recipes.id, id)),

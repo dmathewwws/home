@@ -49,9 +49,15 @@ function Entry({ reflection }: { reflection: ReflectionListItem }) {
       )}
       <h3 className="font-display font-extrabold text-[20px] tracking-[-0.01em] mt-3.5 mb-1.5">
         {reflection.recipeId ? (
-          <Link to={`/recipe/${reflection.recipeId}`}>{reflection.recipeTitle}</Link>
+          <Link to={`/recipe/${reflection.recipeId}`}>
+            {reflection.recipeTitle}
+            {reflection.variation ? ` · ${reflection.variation}` : ''}
+          </Link>
         ) : (
-          reflection.recipeTitle
+          <>
+            {reflection.recipeTitle}
+            {reflection.variation ? ` · ${reflection.variation}` : ''}
+          </>
         )}
       </h3>
       {reflection.note && <p className="text-[15.5px] leading-normal">{reflection.note}</p>}

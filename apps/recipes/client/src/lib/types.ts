@@ -22,10 +22,16 @@ export interface RecipeSwap {
   replacement: string
 }
 
-export interface RecipeSecondarySource {
+/** A named variation of the base recipe: "Chocolate" → "1 tbsp cocoa + dark chips on top". */
+export interface RecipeVariation {
+  name: string
+  detail: string
+}
+
+/** A place to revisit this recipe: url plus an optional short label. */
+export interface RecipeSource {
   url: string
-  label: string
-  notes: string
+  label?: string
 }
 
 export interface RecipeChip {
@@ -48,6 +54,7 @@ export interface RecipeListItem {
   createdBy: string
   createdAt: string
   ingredients: RecipeChip[]
+  variations: RecipeVariation[]
   timesCooked: number
   lastCookedAt: string | null
 }
@@ -55,7 +62,8 @@ export interface RecipeListItem {
 export interface RecipeFull extends RecipeListItem {
   cards: RecipeCard[]
   swaps: RecipeSwap[]
-  secondarySources: RecipeSecondarySource[]
+  notes: string
+  sources: RecipeSource[]
   lastReflection: {
     cookedAt: string
     rep: number
@@ -77,6 +85,7 @@ export interface ReflectionListItem {
   verdict: Verdict
   note: string | null
   changeNextTime: string | null
+  variation: string | null
   minutes: number | null
   rep: number
   photoId: string | null
@@ -105,7 +114,9 @@ export interface RecipeDraft {
   ingredients: RecipeDraftIngredient[]
   cards: RecipeCard[]
   swaps: RecipeSwap[]
-  secondarySources: RecipeSecondarySource[]
+  variations: RecipeVariation[]
+  notes: string
+  sources: RecipeSource[]
 }
 
 export interface ReflectionDraft {
@@ -113,6 +124,7 @@ export interface ReflectionDraft {
   verdict: Verdict
   note?: string | null
   changeNextTime?: string | null
+  variation?: string | null
   minutes?: number | null
   photoId?: string | null
 }
@@ -145,4 +157,5 @@ export interface ImportDraft {
   ingredients: ImportIngredient[]
   cards: RecipeCard[]
   swaps: RecipeSwap[]
+  variations: RecipeVariation[]
 }
