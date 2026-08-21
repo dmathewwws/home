@@ -34,7 +34,7 @@ This is a pnpm workspace monorepo with three packages:
   - `index.tsx` - React Router root route
   - `app-shell.tsx` - Full-viewport kraft shell + household gate (loading / logged-out / waiting / member)
   - `tab-shell.tsx` - Tab routes wrapper (recipe list + reflections) with FAB and bottom tabs
-  - `recipe-list.tsx`, `recipe-detail.tsx`, `reflections-list.tsx`, `new-reflection.tsx` - Main screens
+  - `recipe-list.tsx`, `recipe-detail.tsx`, `reflections-list.tsx`, `new-reflection.tsx`, `eating-out-list.tsx`, `new-dish.tsx` - Main screens
   - `paste-json.tsx`, `import-review.tsx`, `manual-entry.tsx` - Add-recipe flows (paste external-tool JSON → review, or type it out; see `docs/recipe-import-spec.md`)
   - `not-found.tsx` - 404 page
 - `/client/src/app.tsx` - Main component with React Router and Local First Auth integration
@@ -193,6 +193,7 @@ Defined inline in `/server/src/durable-object.ts` and `/server/src/index.ts`.
 | `user-left` | User removed |
 | `recipe-created` / `recipe-updated` / `recipe-deleted` | `{id}` — refetch recipe lists |
 | `reflection-created` / `reflection-deleted` | `{id, recipeId}` — refetch reflections + recipe tallies |
+| `dish-created` / `dish-deleted` | `{id}` — refetch the eating-out journal |
 | `reset` | Admin reset with message |
 
 ### Responsive Layout
@@ -230,6 +231,9 @@ unauthenticated); clients refetch via the API.
 | `POST` | `/api/reflections/list` | Cooking journal, newest first | Member |
 | `POST` | `/api/reflections` | Log a cook (verifies R2 photo objects exist) | Member |
 | `POST` | `/api/reflections/:id/delete` | Delete reflection + R2 photo + cache purge | Owner/admin |
+| `POST` | `/api/dishes/list` | Eating-out journal, newest first | Member |
+| `POST` | `/api/dishes` | Log a restaurant dish (name required; place/photo/note optional) | Member |
+| `POST` | `/api/dishes/:id/delete` | Delete dish + R2 photo + cache purge | Owner/admin |
 | `POST` | `/api/request-upload` | Mint photoId + presigned R2 PUT URLs (dev: worker fallback URLs) | Member |
 | `PUT` | `/api/dev-upload/*` | Dev-only upload sink (404s in prod) | — |
 | `GET` | `/api/img/*` | Serve photos from R2, immutable edge cache | Public (UUID keys) |

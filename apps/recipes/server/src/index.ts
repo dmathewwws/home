@@ -14,10 +14,11 @@ import { createDb } from './db/client'
 import * as UserModel from './db/models/users'
 import * as RecipeModel from './db/models/recipes'
 import * as ReflectionModel from './db/models/reflections'
+import * as DishModel from './db/models/dishes'
 import * as IngredientModel from './db/models/ingredients'
 import { decodeAndVerifyJWT } from '@home/recipes-shared'
 import { AuthError, authFromBody, requireOwnerOrAdmin } from './auth'
-import { ValidationError, validateRecipeInput, validateReflectionInput } from './validation'
+import { ValidationError, validateDishInput, validateRecipeInput, validateReflectionInput } from './validation'
 import { PHOTO_KEY_RE, canPresign, deletePhoto, photoKeys, uploadUrlFor } from './r2'
 
 // The app is served under /<slug>/ on the shared domain; basePath keeps every
@@ -406,6 +407,74 @@ app.post('/api/reflections/:id/delete', async (c) => {
     return c.json({ success: true })
   } catch (error) {
     return errorResponse(c, error, 'Failed to delete reflection')
+  }
+})
+
+// ---------------------------------------------------------------------------
+// Dishes — the eating-out journal (restaurant / fast-food logs)
+// ---------------------------------------------------------------------------
+
+/**
+ * POST /api/dishes/list - All dishes, newest first
+ */
+app.post('/api/dishes/list', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { db } = await authFromBody(c, body)
+    const dishes = await DishModel.listDishes(db)
+    return c.json({ dishes })
+  } catch (error) {
+    return errorResponse(c, error, 'Failed to list dishes')
+  }
+})
+
+/**
+ * POST /api/dishes - Log a dish. If it carries a photo, both R2 objects
+ * must already exist (uploaded via request-upload URLs).
+ */
+app.post('/api/dishes', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { db, user } = await authFromBody(c, body)
+    const input = validateDishInput(body.dish)
+
+    if (input.photoId) {
+      const { fullKey, thumbKey } = photoKeys(input.photoId)
+      if (!PHOTO_KEY_RE.test(fullKey)) return c.json({ error: 'Invalid photoId' }, 400)
+      const [full, thumb] = await Promise.all([
+        c.env.PHOTOS_BUCKET.head(fullKey),
+        c.env.PHOTOS_BUCKET.head(thumbKey),
+      ])
+      if (!full || !thumb) return c.json({ error: 'Photo upload incomplete — try the photo again' }, 400)
+    }
+
+    const dish = await DishModel.createDish(db, user.did, input)
+    await notifyDO(c, 'dish-created', { id: dish.id })
+    return c.json({ dish })
+  } catch (error) {
+    return errorResponse(c, error, 'Failed to save dish')
+  }
+})
+
+/**
+ * POST /api/dishes/:id/delete - Owner or admin; removes R2 photo too
+ */
+app.post('/api/dishes/:id/delete', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { db, user } = await authFromBody(c, body)
+    const id = c.req.param('id')
+    const dish = await DishModel.getDishById(db, id)
+    if (!dish) return c.json({ error: 'Dish not found' }, 404)
+    requireOwnerOrAdmin(user, dish.createdBy)
+    await DishModel.deleteDish(db, id)
+    if (dish.photoId) {
+      await deletePhoto(c.env, c.req.url, dish.photoId)
+    }
+    await notifyDO(c, 'dish-deleted', { id })
+    return c.json({ success: true })
+  } catch (error) {
+    return errorResponse(c, error, 'Failed to delete dish')
   }
 })
 

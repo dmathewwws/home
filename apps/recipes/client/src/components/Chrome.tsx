@@ -27,6 +27,9 @@ export function NavPills() {
       <NavLink to="/reflections" className={pillClass}>
         Reflections
       </NavLink>
+      <NavLink to="/eating-out" className={pillClass}>
+        Eating out
+      </NavLink>
     </nav>
   )
 }
@@ -61,10 +64,10 @@ export function TabBar() {
       isActive ? 'text-ink' : 'text-muted'
     }`
   const indicator = (isActive: boolean) =>
-    isActive ? <span className="absolute -top-0.5 left-[22%] right-[22%] h-1 bg-yolk" /> : null
+    isActive ? <span className="absolute -top-0.5 left-[18%] right-[18%] h-1 bg-yolk" /> : null
 
   return (
-    <nav className="md:hidden grid grid-cols-2 bg-kraft border-t-2 border-ink pb-[env(safe-area-inset-bottom)] text-center" role="tablist">
+    <nav className="md:hidden grid grid-cols-3 bg-kraft border-t-2 border-ink pb-[env(safe-area-inset-bottom)] text-center" role="tablist">
       <NavLink to="/" end className={tabClass} role="tab">
         {({ isActive }) => (
           <>
@@ -78,6 +81,14 @@ export function TabBar() {
           <>
             {indicator(isActive)}
             Reflections
+          </>
+        )}
+      </NavLink>
+      <NavLink to="/eating-out" className={tabClass} role="tab">
+        {({ isActive }) => (
+          <>
+            {indicator(isActive)}
+            Eating out
           </>
         )}
       </NavLink>

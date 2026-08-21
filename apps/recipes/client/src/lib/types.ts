@@ -94,6 +94,17 @@ export interface ReflectionListItem {
   cookedAt: string
 }
 
+export interface DishListItem {
+  id: string
+  name: string
+  place: string | null
+  note: string | null
+  photoId: string | null
+  createdBy: string
+  authorName: string | null
+  createdAt: string
+}
+
 /** What POST /api/recipes accepts. */
 export interface RecipeDraftIngredient {
   ingredientId?: string
@@ -126,6 +137,14 @@ export interface ReflectionDraft {
   changeNextTime?: string | null
   variation?: string | null
   minutes?: number | null
+  photoId?: string | null
+}
+
+/** What POST /api/dishes accepts — only the name is required. */
+export interface DishDraft {
+  name: string
+  place?: string | null
+  note?: string | null
   photoId?: string | null
 }
 

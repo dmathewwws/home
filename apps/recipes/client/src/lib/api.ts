@@ -6,6 +6,8 @@
  */
 
 import type {
+  DishDraft,
+  DishListItem,
   Ingredient,
   RecipeDraft,
   RecipeFull,
@@ -83,6 +85,15 @@ export const createReflection = (getJwt: GetJwt, reflection: ReflectionDraft) =>
 
 export const deleteReflection = (getJwt: GetJwt, id: string) =>
   post<{ success: boolean }>(getJwt, `reflections/${id}/delete`)
+
+export const listDishes = (getJwt: GetJwt) =>
+  post<{ dishes: DishListItem[] }>(getJwt, 'dishes/list').then((r) => r.dishes)
+
+export const createDish = (getJwt: GetJwt, dish: DishDraft) =>
+  post<{ dish: DishListItem }>(getJwt, 'dishes', { dish }).then((r) => r.dish)
+
+export const deleteDish = (getJwt: GetJwt, id: string) =>
+  post<{ success: boolean }>(getJwt, `dishes/${id}/delete`)
 
 export const requestUpload = (getJwt: GetJwt) =>
   post<{ photoId: string; fullUrl: string; thumbUrl: string }>(getJwt, 'request-upload')

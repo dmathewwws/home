@@ -124,6 +124,18 @@ export const reflections = sqliteTable('reflections', {
   index('idx_reflections_cooked_at').on(table.cookedAt),
 ])
 
+export const dishes = sqliteTable('dishes', {
+  id: text('id').notNull().primaryKey(),
+  name: text('name').notNull(),
+  place: text('place'), // restaurant / fast-food spot; optional
+  note: text('note'),
+  photoId: text('photo_id'), // uuid; R2 keys derived as photos/<id>/(full|thumb).jpg
+  createdBy: text('created_by').notNull(), // who ate it (verified JWT iss)
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+}, (table) => [
+  index('idx_dishes_created_at').on(table.createdAt),
+])
+
 // Type inference for TypeScript
 export type User = typeof users.$inferSelect
 export type UserInsert = typeof users.$inferInsert
@@ -134,3 +146,5 @@ export type IngredientInsert = typeof ingredients.$inferInsert
 export type RecipeIngredient = typeof recipeIngredients.$inferSelect
 export type Reflection = typeof reflections.$inferSelect
 export type ReflectionInsert = typeof reflections.$inferInsert
+export type Dish = typeof dishes.$inferSelect
+export type DishInsert = typeof dishes.$inferInsert

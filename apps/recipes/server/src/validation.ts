@@ -17,6 +17,7 @@ import {
 } from './db/schema'
 import type { RecipeInput, RecipeIngredientInput } from './db/models/recipes'
 import type { ReflectionInput } from './db/models/reflections'
+import type { DishInput } from './db/models/dishes'
 
 export const CARD_MAX_CHARS = 140
 const TITLE_MAX = 200
@@ -170,6 +171,18 @@ export function validateReflectionInput(raw: unknown): ReflectionInput {
     changeNextTime: optionalTrimmed(raw.changeNextTime, 'changeNextTime', 500),
     variation: optionalTrimmed(raw.variation, 'variation', VARIATION_NAME_MAX),
     minutes,
+    photoId: optionalTrimmed(raw.photoId, 'photoId', 60),
+  }
+}
+
+export function validateDishInput(raw: unknown): DishInput {
+  if (!isRecord(raw)) fail('dish must be an object')
+  if (typeof raw.name !== 'string' || !raw.name.trim()) fail('The dish needs a name')
+  if (raw.name.trim().length > 120) fail('Dish name is too long (max 120 characters)')
+  return {
+    name: raw.name.trim(),
+    place: optionalTrimmed(raw.place, 'place', 120),
+    note: optionalTrimmed(raw.note, 'note', TEXT_MAX),
     photoId: optionalTrimmed(raw.photoId, 'photoId', 60),
   }
 }

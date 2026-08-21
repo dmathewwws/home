@@ -10,6 +10,8 @@ import { PasteJson } from './paste-json'
 import { ImportReview } from './import-review'
 import { ManualEntry } from './manual-entry'
 import { NewReflection } from './new-reflection'
+import { EatingOutList } from './eating-out-list'
+import { NewDish } from './new-dish'
 import { NotFound } from './not-found'
 
 export const router = createBrowserRouter(
@@ -26,6 +28,7 @@ export const router = createBrowserRouter(
               children: [
                 { index: true, element: <RecipeList /> },
                 { path: 'reflections', element: <ReflectionsList /> },
+                { path: 'eating-out', element: <EatingOutList /> },
               ],
             },
             { path: 'recipe/:id', element: <RecipeDetail /> },
@@ -34,6 +37,7 @@ export const router = createBrowserRouter(
             { path: 'add/review', element: <ImportReview /> },
             { path: 'add/manual', element: <ManualEntry /> },
             { path: 'reflections/new', element: <NewReflection /> },
+            { path: 'eating-out/new', element: <NewDish /> },
             { path: '*', element: <NotFound /> },
           ],
         },

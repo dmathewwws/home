@@ -1,7 +1,7 @@
 /**
- * Layout route for the two tab screens. Owns the FAB (context-aware: recipes
- * tab opens the add sheet; reflections tab goes straight to a new
- * reflection) and the add sheet itself.
+ * Layout route for the tab screens. Owns the FAB (context-aware: recipes
+ * tab opens the add sheet; reflections and eating-out tabs go straight to
+ * their new-entry screens) and the add sheet itself.
  */
 
 import { useState } from 'react'
@@ -13,18 +13,20 @@ export function TabShell() {
   const location = useLocation()
   const navigate = useNavigate()
   const onReflections = location.pathname.startsWith('/reflections')
+  const onEatingOut = location.pathname.startsWith('/eating-out')
+
+  const fab = onReflections
+    ? { label: 'Log a cook', onClick: () => navigate('/reflections/new') }
+    : onEatingOut
+      ? { label: 'Log a dish', onClick: () => navigate('/eating-out/new') }
+      : { label: 'Add a recipe', onClick: () => setSheetOpen(true) }
 
   return (
     <>
       <div className="flex-1 overflow-y-auto flex flex-col">
         <Outlet />
       </div>
-      {!sheetOpen && (
-        <Fab
-          label={onReflections ? 'Log a cook' : 'Add a recipe'}
-          onClick={() => (onReflections ? navigate('/reflections/new') : setSheetOpen(true))}
-        />
-      )}
+      {!sheetOpen && <Fab label={fab.label} onClick={fab.onClick} />}
       <TabBar />
       <AddSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
     </>

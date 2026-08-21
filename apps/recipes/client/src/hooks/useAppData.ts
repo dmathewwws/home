@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocalFirstAuth } from './useLocalFirstAuth'
 import * as api from '../lib/api'
-import type { RecipeListItem, ReflectionListItem } from '../lib/types'
+import type { DishListItem, RecipeListItem, ReflectionListItem } from '../lib/types'
 
 function useFetched<T>(
   fetcher: (getJwt: api.GetJwt) => Promise<T>,
@@ -70,4 +70,12 @@ export function useReflections() {
     ['reflection-'],
   )
   return { reflections: data, error, loading, refetch }
+}
+
+export function useDishes() {
+  const { data, error, loading, refetch } = useFetched<DishListItem[]>(
+    (getJwt) => api.listDishes(getJwt),
+    ['dish-'],
+  )
+  return { dishes: data, error, loading, refetch }
 }
