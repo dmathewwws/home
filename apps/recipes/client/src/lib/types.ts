@@ -5,7 +5,7 @@ export type Meal = (typeof MEALS)[number]
 
 export type SourceType = 'video' | 'book' | 'notes'
 
-export const INGREDIENT_ROLES = ['protein', 'aromatic', 'produce', 'pantry'] as const
+export const INGREDIENT_ROLES = ['protein', 'dairy', 'produce', 'aromatic', 'spice', 'grain', 'fat', 'sauce', 'sweet', 'pantry'] as const
 export type IngredientRole = (typeof INGREDIENT_ROLES)[number]
 
 export type Verdict = 'keeper' | 'another-go' | 'never-again'

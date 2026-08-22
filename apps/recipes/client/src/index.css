@@ -125,10 +125,16 @@ body {
     background: #00000008;
     white-space: nowrap;
   }
-  .ing-prot { border-color: var(--color-sear); background: #9C3B141a; }
-  .ing-arom { border-color: var(--color-flame); background: #2E5C8A1a; }
-  .ing-herb { border-color: var(--color-herb); background: #5C6B3C1f; }
-  .ing-pan  { border-color: #A87C0C; background: #E9A61230; }
+  .ing-prot  { border-color: var(--color-sear); background: #9C3B141a; }
+  .ing-dairy { border-color: #6E8A93; background: #6E8A9326; }
+  .ing-herb  { border-color: var(--color-herb); background: #5C6B3C1f; }
+  .ing-arom  { border-color: var(--color-flame); background: #2E5C8A1a; }
+  .ing-spice { border-color: #8C3A57; background: #8C3A5722; }
+  .ing-grain { border-color: #8A6A44; background: #8A6A4426; }
+  .ing-fat   { border-color: #A87C0C; background: #E9A61230; }
+  .ing-sauce { border-color: #5B4A87; background: #5B4A8722; }
+  .ing-sweet { border-color: #B06B86; background: #B06B8622; }
+  .ing-pan   { border-color: #7A6B58; background: #7A6B5822; }
   .ing .amt { color: var(--color-muted); }
   .ing-swap::after { content: " \21C4"; color: var(--color-muted); }
   .ing-maybe { border-style: dashed; color: var(--color-muted); }

@@ -2,8 +2,14 @@ import type { IngredientRole } from '../lib/types'
 
 const ROLE_CLASS: Record<IngredientRole, string> = {
   protein: 'ing-prot',
-  aromatic: 'ing-arom',
+  dairy: 'ing-dairy',
   produce: 'ing-herb',
+  aromatic: 'ing-arom',
+  spice: 'ing-spice',
+  grain: 'ing-grain',
+  fat: 'ing-fat',
+  sauce: 'ing-sauce',
+  sweet: 'ing-sweet',
   pantry: 'ing-pan',
 }
 

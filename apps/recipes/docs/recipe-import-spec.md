@@ -60,7 +60,7 @@ everything else has a default.
 | `source.thumbUrl` | no | null | ≤500 chars |
 | `ingredients` | no | `[]` | ≤40 items, names unique (case-insensitive) |
 | `ingredients[].name` | yes | — | non-empty, ≤80 chars; singular, capitalized ("Firm tofu") |
-| `ingredients[].role` | yes | — | `protein` \| `aromatic` \| `produce` \| `pantry` |
+| `ingredients[].role` | yes | — | `protein` \| `dairy` \| `produce` \| `aromatic` \| `spice` \| `grain` \| `fat` \| `sauce` \| `sweet` \| `pantry` |
 | `ingredients[].amount` | no | null | ≤60 chars; as spoken ("400g", "2 cloves", "thumb") |
 | `ingredients[].maybe` | no | `false` | `true` = only mentioned in passing / optional — the review screen offers tap-to-keep-or-drop |
 | `cards` | yes | — | 1–24 items |
@@ -97,11 +97,17 @@ everything else has a default.
 >   cards for most recipes; never pad.
 > - Set a card's `timer` only when the step has a stated duration
 >   ("10 min", "90 sec").
-> - Ingredients: `role` is `protein` (meat/fish/eggs/tofu/cheese), `aromatic`
->   (garlic/onion/ginger/chilli), `produce` (vegetables/fruit/herbs), `pantry`
->   (dry goods, oils, sauces, spices). Names singular and capitalized. Include
->   `amount` as spoken. Mark `"maybe": true` for anything mentioned only in
->   passing or clearly optional.
+> - Ingredients: pick the most specific `role` that fits —
+>   `protein` (meat/fish/eggs/tofu/pulses), `dairy` (milk, butter, cream,
+>   yogurt, cheese), `produce` (vegetables/fruit/fresh herbs), `aromatic`
+>   (fresh garlic/onion/ginger/chilli), `spice` (dried ground or whole
+>   seasonings and blends), `grain` (rice, pasta, noodles, flour, bread,
+>   oats), `fat` (cooking oils and ghee — butter is `dairy`), `sauce`
+>   (bottled sauces, pastes, vinegars, mustards), `sweet` (sugars, syrups,
+>   honey, chocolate), and `pantry` only for what fits nowhere else (salt,
+>   stock, yeast, baking powder). Names singular and capitalized.
+>   Include `amount` as spoken. Mark `"maybe": true` for anything mentioned
+>   only in passing or clearly optional.
 > - If the source presents flavour variations of one base recipe (overnight
 >   oats five ways, one dressing with three finishes), keep ONE set of cards
 >   for the base and list each take under `variations` — name + what changes —

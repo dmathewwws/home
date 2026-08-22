@@ -179,7 +179,7 @@ export const IMPORT_FORMAT_SNIPPET = `{
     "thumbUrl": "https://i.ytimg.com/vi/…/hqdefault.jpg"
   },
   "ingredients": [
-    { "name": "Firm tofu", "role": "protein | aromatic | produce | pantry", "amount": "400g", "maybe": false }
+    { "name": "Firm tofu", "role": "protein | dairy | produce | aromatic | spice | grain | fat | sauce | sweet | pantry", "amount": "400g", "maybe": false }
   ],
   "cards": [
     { "text": "One step, imperative voice, 140 characters or fewer.", "timer": "10 min" }

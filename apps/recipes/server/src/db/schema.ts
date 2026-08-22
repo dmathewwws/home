@@ -26,7 +26,7 @@ export type Meal = (typeof MEALS)[number]
 export const SOURCE_TYPES = ['video', 'book', 'notes'] as const
 export type SourceType = (typeof SOURCE_TYPES)[number]
 
-export const INGREDIENT_ROLES = ['protein', 'aromatic', 'produce', 'pantry'] as const
+export const INGREDIENT_ROLES = ['protein', 'dairy', 'produce', 'aromatic', 'spice', 'grain', 'fat', 'sauce', 'sweet', 'pantry'] as const
 export type IngredientRole = (typeof INGREDIENT_ROLES)[number]
 
 export const VERDICTS = ['keeper', 'another-go', 'never-again'] as const

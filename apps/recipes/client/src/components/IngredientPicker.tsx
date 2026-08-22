@@ -26,8 +26,14 @@ interface IngredientPickerProps {
 
 const ROLE_LABEL: Record<IngredientRole, string> = {
   protein: 'Protein',
-  aromatic: 'Aromatic',
+  dairy: 'Dairy',
   produce: 'Produce',
+  aromatic: 'Aromatic',
+  spice: 'Spice',
+  grain: 'Grain',
+  fat: 'Fat/Oil',
+  sauce: 'Sauce',
+  sweet: 'Sweet',
   pantry: 'Pantry',
 }
 
@@ -145,13 +151,15 @@ export function IngredientPicker({ picked, onChange }: IngredientPickerProps) {
             )}
           </div>
           {pendingNew && (
-            <div className="flex items-center gap-2 mt-2.5">
-              <span className="font-mono2 text-[10.5px] uppercase tracking-[0.1em] text-muted">{pendingNew} is&hellip;</span>
-              {INGREDIENT_ROLES.map((role) => (
-                <button key={role} type="button" className="chip" onClick={() => add({ name: pendingNew, role })}>
-                  {ROLE_LABEL[role]}
-                </button>
-              ))}
+            <div className="mt-3">
+              <span className="font-mono2 text-[10.5px] uppercase tracking-[0.1em] text-muted block mb-1.5">{pendingNew} is&hellip;</span>
+              <div className="flex flex-wrap gap-[5px]">
+                {INGREDIENT_ROLES.map((role) => (
+                  <button key={role} type="button" className="chip" onClick={() => add({ name: pendingNew, role })}>
+                    {ROLE_LABEL[role]}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
