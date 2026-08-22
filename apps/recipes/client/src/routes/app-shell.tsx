@@ -8,6 +8,7 @@
 import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useLocalFirstAuth } from '../hooks/useLocalFirstAuth'
+import { HomeButton } from '../components/Chrome'
 
 function GateScreen({ children }: { children: React.ReactNode }) {
   return (
@@ -65,7 +66,10 @@ function Waiting() {
 export function AppShell() {
   const { user, loading } = useLocalFirstAuth()
 
+  // The gate screens render no TopBar, so they carry their own way back to the
+  // console — otherwise a visitor who isn't a member is stuck on the wall.
   let content: React.ReactNode
+  let gated = true
   if (loading) {
     content = (
       <GateScreen>
@@ -78,10 +82,16 @@ export function AppShell() {
     content = <Waiting />
   } else {
     content = <Outlet />
+    gated = false
   }
 
   return (
     <div className="relative w-full h-dvh bg-kraft overflow-hidden flex flex-col paper-grain">
+      {gated && (
+        <div className="page-col px-5 pt-6">
+          <HomeButton />
+        </div>
+      )}
       {content}
     </div>
   )

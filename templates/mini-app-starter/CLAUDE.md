@@ -29,6 +29,7 @@ This is a pnpm workspace monorepo with three packages:
   - `Avatar.tsx` - User avatar or placeholder
   - `AdminSection.tsx` - Admin-only controls for resetting the event
   - `Footer.tsx` - Footer with attribution link
+  - `HomeButton.tsx` - Icon-only link back to the host console's landing grid (plain `<a>`, not a react-router `Link`)
 - `/client/src/hooks/` - React hooks
   - `useLocalFirstAuth.tsx` - Authentication state management, exports `AuthProvider` and `useLocalFirstAuth()` hook
   - `useWebSockets.ts` - WebSocket connection hook for real-time updates

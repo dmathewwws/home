@@ -108,6 +108,29 @@ host's catch-all, so **every inbound link must use the trailing-slash form
 `ALLOWED_PRODUCTION_ORIGIN` automatically once it is set to the real domain
 (edit the literal in the app's `alchemy.run.ts`).
 
+### Linking back to the host
+
+Give every mini app a visible way out to the console's landing grid — otherwise the
+only route between two mini apps is the URL bar. It **must be a plain anchor**:
+
+```tsx
+<a href="/" aria-label="Back to home">…</a>
+```
+
+A react-router `<Link to="/">` will not work: the router's `basename` is
+`import.meta.env.BASE_URL` (`/guestbook/`), so it resolves to the app's *own* root.
+The console is a separate Worker, so this has to be a full cross-document navigation
+anyway. In local dev the console isn't on the same origin, so point the link at its
+Vite server instead:
+
+```ts
+const HOME_HREF = import.meta.env.DEV ? 'http://localhost:5173/' : '/'
+```
+
+The starter ships this as `client/src/components/HomeButton.tsx`, rendered in the app
+shell and on the members-only waiting screen — the screen where a non-member would
+otherwise be stuck with nowhere to go.
+
 `run_worker_first` matters because assets are uploaded at dist-root keys
 (`/assets/x.js`) while the page requests them under the subpath
 (`/guestbook/assets/x.js`) — without it, asset requests 404 in the worker. The worker's

@@ -95,6 +95,7 @@ export function RecipeList() {
   return (
     <section className="flex-1 flex flex-col">
       <TopBar
+        home
         left={<h1 className="h-display text-[clamp(34px,10vw,42px)]">Recipe&nbsp;Box</h1>}
         right={<NavPills />}
       />

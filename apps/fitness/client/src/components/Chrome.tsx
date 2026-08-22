@@ -44,11 +44,59 @@ export function NavPills() {
   )
 }
 
-export function TopBar({ left, right }: { left: ReactNode; right?: ReactNode }) {
+/**
+ * Out of this app and back to the host console at the zone root. Must be a
+ * plain anchor doing a full cross-document navigation: the console is a
+ * different Worker, and a react-router <Link to="/"> would resolve against the
+ * router basename and land back on this app's own root. In dev the console's
+ * Vite server is on :5173 (strictPort) while this app has its own port.
+ */
+const HOME_HREF = import.meta.env.DEV ? 'http://localhost:5173/' : '/'
+
+export function HomeButton() {
+  return (
+    <a
+      href={HOME_HREF}
+      aria-label="Back to home"
+      title="Back to home"
+      className="flex-none text-ink-3 hover:text-ink transition-colors"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className="w-[22px] h-[22px]"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M19 12H5M12 19l-7-7 7-7" />
+      </svg>
+    </a>
+  )
+}
+
+/**
+ * Two-slot sticky header. `home` opts a screen into the leading
+ * back-to-console icon — the tab screens use it.
+ */
+export function TopBar({
+  home,
+  left,
+  right,
+}: {
+  home?: boolean
+  left: ReactNode
+  right?: ReactNode
+}) {
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-line px-5 py-4 mb-4">
       <div className="page-col flex justify-between items-center gap-3">
-        <div>{left}</div>
+        <div className="flex items-center gap-2.5 min-w-0">
+          {home ? <HomeButton /> : null}
+          <div className="min-w-0">{left}</div>
+        </div>
         {right ? <div>{right}</div> : null}
       </div>
     </header>

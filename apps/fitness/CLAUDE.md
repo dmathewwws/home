@@ -26,7 +26,7 @@ This is a pnpm workspace monorepo with three packages:
 #### Client (`/client/`)
 
 - `/client/src/components/` - React components
-  - `Chrome.tsx` - App chrome: `TopBar`, `NavPills` (desktop nav, rendered in each tab screen's TopBar), `TabBar` (mobile bottom tabs)
+  - `Chrome.tsx` - App chrome: `TopBar` (its `home` flag adds the leading `HomeButton`), `HomeButton` (icon-only link back to the host console — a plain `<a>`, since a react-router `Link` resolves against the router basename), `NavPills` (desktop nav, rendered in each tab screen's TopBar), `TabBar` (mobile bottom tabs)
   - `ActivityCalendar.tsx` - 3-month calendar card (desktop 3-up, mobile single month + ‹ › nav), legend, day-detail strip
   - `MonthGrid.tsx` - One month of day tiles (solid / diagonal-split / rest / future, ink ring on today)
   - `QuickLog.tsx` - "What did you do?" chips, optimistic upsert of today's log

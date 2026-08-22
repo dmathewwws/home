@@ -84,6 +84,7 @@ export function EatingOutList() {
   return (
     <section className="flex-1 flex flex-col">
       <TopBar
+        home
         left={<h1 className="h-display text-[clamp(34px,10vw,42px)]">Eating out</h1>}
         right={<NavPills />}
       />

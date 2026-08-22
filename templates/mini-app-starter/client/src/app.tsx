@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { Onboarding } from 'local-first-auth/react'
 import { AuthProvider, useLocalFirstAuth } from './hooks/useLocalFirstAuth'
 import { Footer } from './components/Footer'
+import { HomeButton } from './components/HomeButton'
 
 /**
  * Members-only waiting screen. Membership is granted from the host console (it
@@ -17,14 +18,19 @@ function WaitingForMembership() {
   }, [refreshUser])
 
   return (
-    <div className="flex-1 flex items-center justify-center px-4">
-      <div className="text-center max-w-md">
-        <div className="text-6xl mb-6">🔒</div>
-        <h1 className="text-3xl font-bold mb-4 text-gray-800">Members only</h1>
-        <p className="text-gray-600">
-          {user?.name ? `${user.name}, ask` : 'Ask'} an admin to approve you in the
-          host console — this page checks again every half minute, no refresh needed.
-        </p>
+    <div className="flex-1 flex flex-col px-4">
+      <div className="page-col w-full pt-6">
+        <HomeButton />
+      </div>
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-6">🔒</div>
+          <h1 className="text-3xl font-bold mb-4 text-gray-800">Members only</h1>
+          <p className="text-gray-600">
+            {user?.name ? `${user.name}, ask` : 'Ask'} an admin to approve you in the
+            host console — this page checks again every half minute, no refresh needed.
+          </p>
+        </div>
       </div>
     </div>
   )
@@ -75,6 +81,9 @@ function Layout() {
         <WaitingForMembership />
       ) : (
         <div className="page-col flex-1 flex flex-col px-4 py-8">
+          <div className="mb-6">
+            <HomeButton />
+          </div>
           <main className="flex-1">
             <Outlet />
           </main>

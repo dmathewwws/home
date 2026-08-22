@@ -15,6 +15,7 @@ export function Activities() {
   return (
     <>
       <TopBar
+        home
         left={<h1 className="font-display text-[20px] font-bold tracking-tight">Activities</h1>}
         right={<NavPills />}
       />

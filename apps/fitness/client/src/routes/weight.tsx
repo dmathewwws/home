@@ -96,6 +96,7 @@ export function Weight() {
   return (
     <>
       <TopBar
+        home
         left={<h1 className="font-display text-[20px] font-bold tracking-tight">Weight</h1>}
         right={<NavPills />}
       />

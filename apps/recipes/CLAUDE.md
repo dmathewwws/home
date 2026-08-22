@@ -26,7 +26,7 @@ This is a pnpm workspace monorepo with three packages:
 #### Client (`/client/`)
 
 - `/client/src/components/` - React components
-  - `Chrome.tsx` - App chrome: `NavPills` (desktop nav, rendered in the tab screens' `TopBar`), `TopBar`, `TabBar` (mobile bottom tabs), `Fab`, `AddSheet`, `SaveBar`
+  - `Chrome.tsx` - App chrome: `NavPills` (desktop nav, rendered in the tab screens' `TopBar`), `TopBar` (its `home` flag adds the leading `HomeButton`), `HomeButton` (icon-only link back to the host console — a plain `<a>`, since a react-router `Link` resolves against the router basename), `BackButton`, `TabBar` (mobile bottom tabs), `Fab`, `AddSheet`, `SaveBar`
 - `/client/src/hooks/` - React hooks
   - `useLocalFirstAuth.tsx` - Authentication state management, exports `AuthProvider` and `useLocalFirstAuth()` hook
   - `useWebSockets.ts` - WebSocket connection hook for real-time updates
