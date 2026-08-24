@@ -20,7 +20,7 @@
  */
 export const HOST_APP_SLUG = 'console'
 
-export type ChildBindingKey = 'DB_RECIPES' | 'DB_FITNESS'
+export type ChildBindingKey = 'DB_RECIPES' | 'DB_FITNESS' | 'DB_HOBBIES'
 
 export interface ManagedApp {
   /** URL slug; the landing-grid card links to `/<slug>/`. */
@@ -61,5 +61,15 @@ export const MANAGED_APPS: ManagedApp[] = [
     bindingKey: 'DB_FITNESS',
     dbName: 'home-fitness-mini-app-prod-db',
     databaseId: '0c4a640a-7a77-4bc2-86f3-f03386f79f9c',
+  },
+  {
+    slug: 'hobbies',
+    name: 'Hobbies',
+    description: 'Track your hobbies.',
+    icon: '🎨',
+    accent: 'from-purple-400 to-pink-300',
+    bindingKey: 'DB_HOBBIES',
+    dbName: 'home-hobbies-mini-app-prod-db',
+    databaseId: '09f9d2e5-cfb0-47b1-888e-4e62fc5a8cb1',
   },
 ]
