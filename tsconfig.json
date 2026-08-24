@@ -9,6 +9,9 @@
     },
     {
       "path": "./apps/fitness"
+    },
+    {
+      "path": "./apps/hobbies"
     }
   ]
 }
