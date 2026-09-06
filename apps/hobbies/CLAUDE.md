@@ -69,7 +69,7 @@ This is a pnpm workspace monorepo with three packages:
 - `/server/src/durable-object.ts` - Durable Object class for real-time WebSocket connections (WebSocket message types defined inline)
 - `/server/src/db/client.ts` - Database client factory for Cloudflare D1
 - `/server/src/db/schema.ts` - Database schema: `users`, `hobbies` (kind: learn|craft, hueIndex), `pieces` (JSON links, source: seed|user|muse), `sessions` (pieceName snapshot, date key, photoId)
-- `/server/src/db/seed.ts` - Per-member starter data (the five founding hobbies + pieces), called from `/api/bootstrap`; self-healing — it inserts only the seed hobbies a member is missing, so hobbies added to `SEED_HOBBIES` later reach existing members on their next bootstrap
+- `/server/src/db/seed.ts` - Per-member starter data (the seven founding hobbies + pieces), called from `/api/bootstrap`; self-healing — it inserts only the seed hobbies a member is missing, so hobbies added to `SEED_HOBBIES` later reach existing members on their next bootstrap
 - `/server/src/db/models/index.ts` - Export file for all models
 - `/server/src/db/models/users.ts` - User database model
 - `/server/src/db/models/hobbies.ts`, `pieces.ts`, `sessions.ts` - Hobby-data models, all did-scoped (per-member privacy)

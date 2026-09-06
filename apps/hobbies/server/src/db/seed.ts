@@ -1,5 +1,5 @@
 /**
- * Per-member starter data. Every member begins with the five founding hobbies
+ * Per-member starter data. Every member begins with the seven founding hobbies
  * and their starter pieces so the Today screen is never blank.
  *
  * Seeding is self-healing: it diffs SEED_HOBBIES against the hobbies the member
@@ -78,6 +78,26 @@ export const SEED_HOBBIES: SeedHobby[] = [
       { name: 'Weeknight dal', links: [] },
       { name: 'Whatever is in the fridge', links: [] },
       { name: 'A new knife skill', links: [] },
+    ],
+  },
+  {
+    name: 'Reading',
+    kind: 'learn',
+    hueIndex: 4,
+    pieces: [
+      { name: 'Currently reading', links: [{ label: 'TAB', url: 'https://www.goodreads.com/review/list' }] },
+      { name: 'Next on the shelf', links: [] },
+      { name: '10 pages before bed', links: [] },
+    ],
+  },
+  {
+    name: 'Cleaning',
+    kind: 'craft',
+    hueIndex: 5,
+    pieces: [
+      { name: 'One drawer', links: [] },
+      { name: 'Kitchen counters', links: [] },
+      { name: '15-minute reset', links: [] },
     ],
   },
 ]

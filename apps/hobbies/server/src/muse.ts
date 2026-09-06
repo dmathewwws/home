@@ -51,6 +51,18 @@ const COOKING_POOL: Idea[] = [
   { title: 'No-recipe soup', why: 'Aromatics, liquid, whatever is left — soup is where improvising is lowest-stakes.' },
 ]
 
+const CLEANING_POOL: Idea[] = [
+  { title: 'One surface only', why: 'Pick a single counter and stop there — the rest of the room is not today’s problem.' },
+  { title: 'Fifteen-minute sprint', why: 'Set a timer, move fast, quit when it rings; whatever got done, got done.' },
+  { title: 'The drawer you avoid', why: 'One drawer, start to finish — small enough to actually reach the bottom of.' },
+  { title: 'Ten things out', why: 'Find ten things to bin or donate and the room loosens without any real tidying.' },
+  { title: 'Floor first', why: 'Clear only what is on the floor; the room reads clean long before it is.' },
+  { title: 'Reset one room', why: 'Put everything back where it lives — no scrubbing, just returning things home.' },
+  { title: 'Clean while it heats', why: 'Piggyback on the oven or kettle; the timer is already running anyway.' },
+  { title: 'Wipe the forgotten thing', why: 'Light switch, door handle, fridge front — two minutes for the bits nobody does.' },
+  { title: 'Music-length tidy', why: 'One album, one pass through the flat; stop when the last track ends.' },
+]
+
 /** Prompts that work for any craft hobby we have no curated pool for. */
 const GENERIC_POOL: Idea[] = [
   { title: 'The ten-minute version', why: 'Do the smallest possible version today — starting is the whole battle.' },
@@ -67,6 +79,7 @@ const GENERIC_POOL: Idea[] = [
 const SPARK_POOLS: Record<string, Idea[]> = {
   'chalk drawing': CHALK_POOL,
   'cooking': COOKING_POOL,
+  'cleaning': CLEANING_POOL,
 }
 
 export const poolFor = (hobbyName: string): Idea[] =>
