@@ -27,15 +27,15 @@ This is a pnpm workspace monorepo with three packages:
 
 - `/client/src/components/` - React components
   - `Chrome.tsx` - App chrome: `TopBar` (its `home` flag adds the leading `HomeButton`), `HomeButton` (icon-only link back to the host console — a plain `<a>`, since a react-router `Link` resolves against the router basename), `NavPills` (desktop nav, rendered in each tab screen's TopBar), `TabBar` (mobile bottom tabs)
-  - `ActivityCalendar.tsx` - 3-month calendar card (desktop 3-up, mobile single month + ‹ › nav), legend, day-detail strip
+  - `ActivityCalendar.tsx` - 3-month calendar card (desktop 3-up, mobile single month + ‹ › nav), legend, day-detail strip; `selectedDay`/`onSelectDay` come from the route
   - `MonthGrid.tsx` - One month of day tiles (solid / diagonal-split / rest / future, ink ring on today)
-  - `QuickLog.tsx` - "What did you do?" chips, optimistic upsert of today's log
+  - `QuickLog.tsx` - "What did you do?" chips, optimistic upsert of the selected day's log (defaults to today; the Activities route owns the selected day)
   - `WeightChart.tsx` - SVG weight trend (adaptive gridlines, dashed goal line)
   - `AdminSection.tsx` - Admin-only controls for resetting the event
 - `/client/src/hooks/` - React hooks
   - `useLocalFirstAuth.tsx` - Auth state + `subscribeToEvents` broadcast bus, exports `AuthProvider` and `useLocalFirstAuth()`
   - `useWebSockets.ts` - WebSocket connection hook for real-time updates
-  - `useAppData.ts` - `useActivityRange` / `useTodayLog` / `useWeights`: fetch on mount, refetch on matching broadcasts
+  - `useAppData.ts` - `useActivityRange` / `useDayLog` / `useWeights`: fetch on mount, refetch on matching broadcasts
 - `/client/src/lib/` - `activities.ts` (activity catalog — mirror of server ACTIVITY_KEYS), `api.ts` (POST helpers, fresh JWT per call), `dates.ts`, `period.ts` (3-month window), `weight-math.ts`, `constants.ts` (`GOAL_KG`)
 - `/client/src/routes/` - Route components
   - `index.tsx` - React Router root route

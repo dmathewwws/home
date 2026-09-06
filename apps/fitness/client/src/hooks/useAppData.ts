@@ -9,11 +9,14 @@ import { useLocalFirstAuth } from './useLocalFirstAuth'
 import * as api from '../lib/api'
 import type { ActivityKey } from '../lib/activities'
 import type { WeightEntry } from '../lib/types'
-import { todayKey } from '../lib/dates'
 
 function useFetched<T>(
   fetcher: (getJwt: api.GetJwt) => Promise<T>,
   eventPrefixes: string[],
+  // `resetOnFetcherChange` blanks `data` the moment the fetcher changes, so a
+  // caller never renders the previous key's result. Off by default: the
+  // calendar wants its old tiles to stay put while the next period loads.
+  { resetOnFetcherChange = false }: { resetOnFetcherChange?: boolean } = {},
 ): { data: T | null; error: string | null; loading: boolean; refetch: () => void } {
   const { getProfileJwt, subscribeToEvents } = useLocalFirstAuth()
   const [data, setData] = useState<T | null>(null)
@@ -44,6 +47,7 @@ function useFetched<T>(
   }, [fetcher, getProfileJwt])
 
   useEffect(() => {
+    if (resetOnFetcherChange) setData(null)
     const cancel = refetch()
     const unsubscribe = subscribeToEvents((type) => {
       if (eventPrefixes.some((prefix) => type.startsWith(prefix))) refetch()
@@ -73,15 +77,18 @@ export function useActivityRange(fromKey: string, toKey: string) {
   return { logsByDate, error, loading }
 }
 
-/** Today's activity set — independent of the calendar's viewed period. */
-export function useTodayLog() {
-  const today = todayKey()
+/**
+ * One day's activity set — the calendar's selected day, or today. Independent
+ * of the calendar's viewed period. `loaded` is false until this exact day's
+ * rows are in hand, so the caller can avoid rendering an empty set as "rest".
+ */
+export function useDayLog(date: string) {
   const fetcher = useCallback(
-    (getJwt: api.GetJwt) => api.fetchActivityRange(getJwt, today, today),
-    [today],
+    (getJwt: api.GetJwt) => api.fetchActivityRange(getJwt, date, date),
+    [date],
   )
-  const { data, error, loading } = useFetched(fetcher, ['activity-'])
-  return { activities: data?.[0]?.activities ?? [], error, loading }
+  const { data, error } = useFetched(fetcher, ['activity-'], { resetOnFetcherChange: true })
+  return { activities: data?.[0]?.activities ?? [], loaded: data !== null, error }
 }
 
 export function useWeights() {

@@ -26,7 +26,7 @@ export type UserInsert = typeof users.$inferInsert
 
 // Canonical activity keys — display names/colors live in
 // client/src/lib/activities.ts; keep the two lists in sync.
-export const ACTIVITY_KEYS = ['bike', 'yoga', 'bball', 'stretch', 'outrig', 'disc', 'badm', 'swim'] as const
+export const ACTIVITY_KEYS = ['bike', 'yoga', 'bball', 'stretch', 'outrig', 'disc', 'badm', 'swim', 'vball'] as const
 export type ActivityKey = (typeof ACTIVITY_KEYS)[number]
 
 // One row per user per day; `activities` is a JSON ActivityKey[] so a day can

@@ -2,7 +2,7 @@
  * One month of the activity calendar: weekday header, leading blanks, and a
  * 7-column grid of rounded day tiles — solid color for one activity, a
  * diagonal split for two-plus, muted gray for rest, faded for future, and an
- * ink ring on today.
+ * ink ring on today, and an outline halo on the selected day.
  */
 
 import { ACTIVITY_BY_KEY, type ActivityKey } from '../lib/activities'
@@ -72,6 +72,8 @@ export function MonthGrid({ year, month, logsByDate, today, selectedDay, onSelec
               style={style}
               className={`relative aspect-square rounded-[4px] flex items-center justify-center text-[0.68rem] font-semibold transition-transform ${bgClass} ${numberClass} ${
                 isFuture ? 'cursor-default' : 'cursor-pointer active:scale-[.94]'
+              } ${
+                selectedDay === key ? 'outline outline-2 outline-offset-[3px] outline-ink/35' : ''
               }`}
             >
               {day}

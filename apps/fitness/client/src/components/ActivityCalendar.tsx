@@ -36,11 +36,16 @@ function NavButton({
   )
 }
 
-export function ActivityCalendar() {
+interface ActivityCalendarProps {
+  /** Owned by the route so the quick-log card can edit the same day. */
+  selectedDay: string | null
+  onSelectDay: (key: string | null) => void
+}
+
+export function ActivityCalendar({ selectedDay, onSelectDay }: ActivityCalendarProps) {
   const [periodOffset, setPeriodOffset] = useState(0)
   // Mobile-visible month within the window: 0 = newest of the three
   const [monthIdx, setMonthIdx] = useState(0)
-  const [selectedDay, setSelectedDay] = useState<string | null>(null)
 
   const today = todayKey()
   const period = getPeriod(periodOffset)
@@ -49,7 +54,7 @@ export function ActivityCalendar() {
   const visible = period.months[monthIdx]
 
   const prevMonth = () => {
-    setSelectedDay(null)
+    onSelectDay(null)
     if (monthIdx === 2) {
       setPeriodOffset(periodOffset + 1)
       setMonthIdx(0)
@@ -58,7 +63,7 @@ export function ActivityCalendar() {
     }
   }
   const nextMonth = () => {
-    setSelectedDay(null)
+    onSelectDay(null)
     if (monthIdx === 0) {
       setPeriodOffset(periodOffset - 1)
       setMonthIdx(2)
@@ -67,7 +72,7 @@ export function ActivityCalendar() {
     }
   }
   const stepPeriod = (delta: number) => {
-    setSelectedDay(null)
+    onSelectDay(null)
     setPeriodOffset(periodOffset + delta)
     setMonthIdx(0)
   }
@@ -112,7 +117,7 @@ export function ActivityCalendar() {
                 logsByDate={logsByDate}
                 today={today}
                 selectedDay={selectedDay}
-                onSelectDay={setSelectedDay}
+                onSelectDay={(key) => onSelectDay(key === selectedDay ? null : key)}
               />
             </div>
           )

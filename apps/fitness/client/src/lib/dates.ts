@@ -33,6 +33,16 @@ export function formatShort(key: string): string {
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+/** '2026-08-14' → 'Thu, Aug 14' */
+export function formatLong(key: string): string {
+  const [y, m, d] = key.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
 /** e.g. 'August 2026' */
 export function monthLabel(year: number, month: number): string {
   return new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })

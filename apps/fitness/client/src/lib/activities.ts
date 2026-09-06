@@ -13,6 +13,7 @@ export const ACTIVITIES = [
   { key: 'disc', name: 'Disc Golf', color: '#A9B75C' },
   { key: 'badm', name: 'Badminton', color: '#C77E8F' },
   { key: 'swim', name: 'Swim', color: '#64AFCF' },
+  { key: 'vball', name: 'Volleyball', color: '#D2795E' },
 ] as const
 
 export type ActivityKey = (typeof ACTIVITIES)[number]['key']
