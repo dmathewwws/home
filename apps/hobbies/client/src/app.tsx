@@ -41,7 +41,7 @@ function SignedOutHero() {
   return (
     <div className="flex-1 flex items-center justify-center px-6 py-16">
       <div className="text-center max-w-md rise">
-        <div className="eyebrow">Sundry</div>
+        <div className="eyebrow">Hobbies</div>
         <h1 className="display-title mt-2 mb-4">A home for your hobbies</h1>
         <p className="text-ink-soft text-[14.5px] mb-8">
           Log what you practiced or made today, keep your lesson links one tap
