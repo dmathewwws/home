@@ -29,7 +29,7 @@ export interface Env {
   R2_BUCKET_NAME?: string
 
   // OpenAI key for the muse. Deliberately optional: absent (the dev default),
-  // the muse serves the curated SPARK_POOL instead (see muse.ts).
+  // the muse serves the curated per-hobby pool instead (see muse.ts).
   OPENAI_API_KEY?: string
 
   // Example runtime secret (see docs/secrets.md for the full add-a-secret pattern).

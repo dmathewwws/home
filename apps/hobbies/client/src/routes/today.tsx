@@ -92,7 +92,7 @@ export function Today() {
         >
           <h3 className="text-[14px] font-semibold text-ink-soft mb-[10px]">
             {activeHobby.kind === 'craft' ? (
-              'What did you draw?'
+              'What did you make?'
             ) : (
               <>
                 What did you work on in <b className="text-ink">{activeHobby.name}</b>?
@@ -100,6 +100,8 @@ export function Today() {
             )}
           </h3>
           <PiecePicker
+            // Remount per hobby so add/edit mode never leaks across a chip switch
+            key={activeHobby.id}
             hobby={activeHobby}
             selectedPieceId={selectedPieceId}
             onSelect={setSelectedPieceId}

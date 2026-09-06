@@ -13,7 +13,7 @@ interface MuseSectionProps {
 /**
  * The AI muse, living exactly where the blank-page problem strikes: inside a
  * craft hobby's picker. Button → shimmer (the OpenAI round-trip) → three
- * {title, why} cards → "Draw this today" saves the idea as a piece.
+ * {title, why} cards → "Make this today" saves the idea as a piece.
  */
 export function MuseSection({ hobby, onPieceCreated }: MuseSectionProps) {
   const { summonMuse, addPiece } = useHobbyData()
@@ -60,7 +60,7 @@ export function MuseSection({ hobby, onPieceCreated }: MuseSectionProps) {
         <>
           <button className="muse-btn" onClick={() => void summon()}>
             <span className="text-[15px]" style={{ color: hue }}>✦</span>
-            Not sure what to draw? Ask the muse
+            Not sure what to make? Ask the muse
           </button>
           <span className="block mt-2 text-[12.5px] text-muted">
             Three prompts, generated fresh — pick one or shuffle again.
@@ -88,7 +88,7 @@ export function MuseSection({ hobby, onPieceCreated }: MuseSectionProps) {
                     disabled={accepting}
                     onClick={() => void accept(idea)}
                   >
-                    Draw this today
+                    Make this today
                   </button>
                 </div>
               </div>

@@ -59,7 +59,7 @@ export function PhotoAttach({ photoId, onChange }: PhotoAttachProps) {
       />
       {photoId && previewUrl ? (
         <div className="flex items-center gap-3">
-          <img src={previewUrl} alt="Attached drawing" className="thumb" />
+          <img src={previewUrl} alt="Attached photo" className="thumb" />
           <span className="flex-1 text-[14px] font-semibold text-ink-soft">Photo attached ✓</span>
           <button
             className="text-[12.5px] font-semibold text-muted underline underline-offset-2"
@@ -93,7 +93,7 @@ export function PhotoAttach({ photoId, onChange }: PhotoAttachProps) {
             <circle cx="12" cy="13" r="3.4" />
             <path d="M9 6l1.2-2h3.6L15 6" />
           </svg>
-          {uploading ? `Uploading… ${Math.round(progress * 100)}%` : "Add a photo of today's drawing"}
+          {uploading ? `Uploading… ${Math.round(progress * 100)}%` : "Add a photo of today's work"}
         </button>
       )}
     </div>

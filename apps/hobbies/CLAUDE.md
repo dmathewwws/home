@@ -28,7 +28,7 @@ This is a pnpm workspace monorepo with three packages:
 - `/client/src/components/` - React components
   - `Heatmap.tsx` - The 12-week × 7-day grid; per-day dominant-hobby hue, intensity by session count, today-tile pop animation
   - `HobbyChips.tsx` - Hobby chip row + inline add-hobby form (name, learn/craft, hue swatch)
-  - `PiecePicker.tsx` - Learn: rows with lesson-link pills; craft: prompt chips; inline add-piece form
+  - `PiecePicker.tsx` - Learn: rows with lesson-link pills; craft: prompt chips; inline add/edit-piece form; an Edit/Done toggle flips the list into edit mode (✎ rename, × delete-with-confirm)
   - `MuseSection.tsx` - AI ideation for craft hobbies (shimmer → 3 idea cards → save-as-piece)
   - `PhotoAttach.tsx` - Craft-only photo attach: client-side resize → presigned/dev-upload PUT
   - `EntryRow.tsx` - Journal entry (dot, piece, optional thumb, date, delete-with-confirm)
@@ -64,12 +64,12 @@ This is a pnpm workspace monorepo with three packages:
 
 - `/server/src/index.ts` - Cloudflare Workers entry point with Hono router, API endpoints, and WebSocket handling
 - `/server/src/auth.ts` - Request auth (`AuthError`, `requireMember`, `authFromBody`): app-data endpoints require a member (`users.is_member`, or admin), granted from the host console
-- `/server/src/muse.ts` - The AI muse: OpenAI Chat Completions call (strict JSON schema) with the curated `SPARK_POOL` fallback whenever `OPENAI_API_KEY` is absent or the call fails
+- `/server/src/muse.ts` - The AI muse: OpenAI Chat Completions call (strict JSON schema) with a curated per-hobby fallback pool (`SPARK_POOLS`, keyed by lowercased hobby name, plus a hobby-agnostic default) whenever `OPENAI_API_KEY` is absent or the call fails
 - `/server/src/r2.ts` - R2 photo helpers (presigned direct-to-R2 PUTs in prod; dev-upload fallback; `deletePhoto` + edge-cache purge)
 - `/server/src/durable-object.ts` - Durable Object class for real-time WebSocket connections (WebSocket message types defined inline)
 - `/server/src/db/client.ts` - Database client factory for Cloudflare D1
 - `/server/src/db/schema.ts` - Database schema: `users`, `hobbies` (kind: learn|craft, hueIndex), `pieces` (JSON links, source: seed|user|muse), `sessions` (pieceName snapshot, date key, photoId)
-- `/server/src/db/seed.ts` - Per-member starter data (the founding four hobbies + pieces), idempotent, called from `/api/bootstrap`
+- `/server/src/db/seed.ts` - Per-member starter data (the five founding hobbies + pieces), called from `/api/bootstrap`; self-healing — it inserts only the seed hobbies a member is missing, so hobbies added to `SEED_HOBBIES` later reach existing members on their next bootstrap
 - `/server/src/db/models/index.ts` - Export file for all models
 - `/server/src/db/models/users.ts` - User database model
 - `/server/src/db/models/hobbies.ts`, `pieces.ts`, `sessions.ts` - Hobby-data models, all did-scoped (per-member privacy)
@@ -242,9 +242,11 @@ endpoints stay open so a visitor can sign in and wait to be let in.
 | `POST` | `/api/add-avatar` | Add or update user avatar | JWT (any) |
 | `DELETE` | `/api/remove-user` | Remove user | JWT (any) |
 | `POST` | `/api/users` | Get all users from database | Member |
-| `POST` | `/api/bootstrap` | `{today}` → hobbies, pieces, 84-day heatmap counts, journal (≤500); seeds starter data on first visit | Member |
+| `POST` | `/api/bootstrap` | `{today}` → hobbies, pieces, 84-day heatmap counts, journal (≤500); seeds any missing starter data | Member |
 | `POST` | `/api/hobbies` | Add a hobby `{name, kind: learn\|craft, hueIndex}` | Member |
 | `POST` | `/api/pieces` | Add a piece `{hobbyId, name, links?, source?}`; links are `{label, url}[]`, http(s) only | Member |
+| `POST` | `/api/pieces/:id` | Rename a piece / replace its links `{name, links?}`; journal entries keep their snapshotted `pieceName` | Member |
+| `POST` | `/api/pieces/:id/delete` | Delete a piece (owner only); sessions keep their `pieceName` snapshot | Member |
 | `POST` | `/api/sessions` | Log a session `{hobbyId, pieceId?, date, photoId?}`; pieceName snapshotted server-side; photos craft-only, R2 objects verified | Member |
 | `POST` | `/api/sessions/:id/delete` | Delete an entry (owner or admin); removes R2 photo + cache | Member |
 | `POST` | `/api/muse` | `{hobbyId, excludeTitles?}` → 3 `{title, why}` ideas (OpenAI, or pool when key absent); craft-only | Member |

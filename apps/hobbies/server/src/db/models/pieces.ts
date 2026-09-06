@@ -57,3 +57,21 @@ export async function createPiece(
     .returning()
   return piece
 }
+
+export async function updatePiece(
+  db: Database,
+  did: string,
+  id: string,
+  input: { name: string; links: PieceLink[] },
+): Promise<Piece | undefined> {
+  const [piece] = await db
+    .update(pieces)
+    .set({ name: input.name, links: JSON.stringify(input.links) })
+    .where(and(eq(pieces.did, did), eq(pieces.id, id)))
+    .returning()
+  return piece
+}
+
+export async function deletePiece(db: Database, did: string, id: string): Promise<void> {
+  await db.delete(pieces).where(and(eq(pieces.did, did), eq(pieces.id, id)))
+}

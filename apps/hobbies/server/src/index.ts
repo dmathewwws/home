@@ -234,8 +234,8 @@ function parseLinks(raw: unknown): PieceLinkInput[] | null {
 
 /**
  * POST /api/bootstrap - Everything the client needs to render: the member's
- * hobbies, pieces, 12-week heatmap counts, and journal. Seeds the four
- * starter hobbies on a member's first visit.
+ * hobbies, pieces, 12-week heatmap counts, and journal. Seeds any starter
+ * hobbies the member is missing (all five on a first visit).
  */
 app.post('/api/bootstrap', async (c) => {
   try {
@@ -343,6 +343,60 @@ app.post('/api/pieces', async (c) => {
     return c.json({ piece: { ...piece, links: JSON.parse(piece.links) } })
   } catch (error) {
     return errorResponse(c, error, 'Failed to add piece')
+  }
+})
+
+/**
+ * POST /api/pieces/:id - Rename a piece / change its links. Journal entries keep
+ * the pieceName they snapshotted at log time, so renaming never rewrites history.
+ */
+app.post('/api/pieces/:id', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { db, user } = await authFromBody(c, body)
+
+    // did-scoped lookup is the ownership check
+    const piece = await PieceModel.getPiece(db, user.did, c.req.param('id'))
+    if (!piece) return c.json({ error: 'Piece not found' }, 404)
+
+    const name = typeof body.name === 'string' ? body.name.trim() : ''
+    if (name.length < 1 || name.length > 80) {
+      return c.json({ error: 'Piece name must be 1\u201380 characters' }, 400)
+    }
+    const links = parseLinks(body.links)
+    if (links === null) {
+      return c.json({ error: 'Links must be up to 4 {label, url} pairs with http(s) URLs' }, 400)
+    }
+
+    const siblings = await PieceModel.listPiecesForHobby(db, user.did, piece.hobbyId)
+    if (siblings.some((p) => p.id !== piece.id && p.name.toLowerCase() === name.toLowerCase())) {
+      return c.json({ error: 'That piece already exists' }, 409)
+    }
+
+    const updated = await PieceModel.updatePiece(db, user.did, piece.id, { name, links })
+    if (!updated) return c.json({ error: 'Piece not found' }, 404)
+    return c.json({ piece: { ...updated, links: JSON.parse(updated.links) } })
+  } catch (error) {
+    return errorResponse(c, error, 'Failed to update piece')
+  }
+})
+
+/**
+ * POST /api/pieces/:id/delete - Remove a piece. Sessions that referenced it keep
+ * their pieceName snapshot, so the journal and heatmap are untouched.
+ */
+app.post('/api/pieces/:id/delete', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { db, user } = await authFromBody(c, body)
+
+    const piece = await PieceModel.getPiece(db, user.did, c.req.param('id'))
+    if (!piece) return c.json({ error: 'Piece not found' }, 404)
+
+    await PieceModel.deletePiece(db, user.did, piece.id)
+    return c.json({ success: true })
+  } catch (error) {
+    return errorResponse(c, error, 'Failed to delete piece')
   }
 })
 

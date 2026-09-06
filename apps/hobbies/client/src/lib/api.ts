@@ -68,6 +68,12 @@ export const createPiece = (
   post<{ piece: Piece }>(getJwt, 'pieces', { hobbyId, name, links, ...(source ? { source } : {}) })
     .then((r) => r.piece)
 
+export const updatePiece = (getJwt: GetJwt, id: string, name: string, links: PieceLink[] = []) =>
+  post<{ piece: Piece }>(getJwt, `pieces/${id}`, { name, links }).then((r) => r.piece)
+
+export const deletePiece = (getJwt: GetJwt, id: string) =>
+  post<{ success: boolean }>(getJwt, `pieces/${id}/delete`)
+
 export const logSession = (
   getJwt: GetJwt,
   hobbyId: string,

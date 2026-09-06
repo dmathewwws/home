@@ -1,7 +1,7 @@
 /**
  * The fixed 8-hue chalk-pastel palette. A hobby stores only its hueIndex;
- * slots 0–3 are the founding four (guitar, piano, hindi, chalk), 4–7 extend
- * the family for new hobbies.
+ * slots 0–3 are the founding four (guitar, piano, hindi, chalk) and 6 is
+ * cooking; the rest extend the family for new hobbies.
  */
 
 import type { Hobby } from './types'
@@ -13,7 +13,7 @@ export const HOBBY_HUES = [
   '#CE8F98', // 3 rose      (Chalk drawing)
   '#9C8FBF', // 4 lilac
   '#7FB8AE', // 5 seafoam
-  '#C89B6E', // 6 clay
+  '#C89B6E', // 6 clay      (Cooking)
   '#8F9BB3', // 7 slate
 ] as const
 

@@ -17,6 +17,8 @@ interface HobbyDataValue extends BootstrapData {
   refetch: () => Promise<void>
   addHobby: (name: string, kind: HobbyKind, hueIndex: number) => Promise<Hobby>
   addPiece: (hobbyId: string, name: string, links?: PieceLink[], source?: 'muse') => Promise<Piece>
+  editPiece: (id: string, name: string, links?: PieceLink[]) => Promise<Piece>
+  removePiece: (id: string) => Promise<void>
   logSession: (hobbyId: string, pieceId: string | null, photoId?: string) => Promise<SessionEntry>
   removeSession: (id: string) => Promise<void>
   summonMuse: (hobbyId: string, excludeTitles?: string[]) => ReturnType<typeof Api.summonMuse>
@@ -65,6 +67,23 @@ export function HobbyDataProvider({ children }: { children: ReactNode }) {
     [getProfileJwt],
   )
 
+  const editPiece = useCallback(
+    async (id: string, name: string, links: PieceLink[] = []) => {
+      const piece = await Api.updatePiece(getProfileJwt, id, name, links)
+      setData((d) => ({ ...d, pieces: d.pieces.map((p) => (p.id === piece.id ? piece : p)) }))
+      return piece
+    },
+    [getProfileJwt],
+  )
+
+  const removePiece = useCallback(
+    async (id: string) => {
+      await Api.deletePiece(getProfileJwt, id)
+      setData((d) => ({ ...d, pieces: d.pieces.filter((p) => p.id !== id) }))
+    },
+    [getProfileJwt],
+  )
+
   const logSession = useCallback(
     async (hobbyId: string, pieceId: string | null, photoId?: string) => {
       const session = await Api.logSession(getProfileJwt, hobbyId, pieceId, todayKey(), photoId)
@@ -108,8 +127,32 @@ export function HobbyDataProvider({ children }: { children: ReactNode }) {
   )
 
   const value = useMemo<HobbyDataValue>(
-    () => ({ ...data, loading, error, refetch, addHobby, addPiece, logSession, removeSession, summonMuse }),
-    [data, loading, error, refetch, addHobby, addPiece, logSession, removeSession, summonMuse],
+    () => ({
+      ...data,
+      loading,
+      error,
+      refetch,
+      addHobby,
+      addPiece,
+      editPiece,
+      removePiece,
+      logSession,
+      removeSession,
+      summonMuse,
+    }),
+    [
+      data,
+      loading,
+      error,
+      refetch,
+      addHobby,
+      addPiece,
+      editPiece,
+      removePiece,
+      logSession,
+      removeSession,
+      summonMuse,
+    ],
   )
 
   return <HobbyDataContext.Provider value={value}>{children}</HobbyDataContext.Provider>
