@@ -6,7 +6,7 @@ import { PhotoAttach } from '../components/PhotoAttach'
 import { PiecePicker } from '../components/PiecePicker'
 import { useToast } from '../components/Toast'
 import { useHobbyData } from '../hooks/useHobbyData'
-import { eyebrowDate, todayKey } from '../lib/dates'
+import { eyebrowDate, formatWhen, fromKey, todayKey } from '../lib/dates'
 import { hueFor } from '../lib/hues'
 import type { Hobby } from '../lib/types'
 
@@ -20,10 +20,19 @@ export function Today() {
   const [logging, setLogging] = useState(false)
 
   const today = todayKey()
-  const doneToday = useMemo(
-    () => new Set(journal.filter((s) => s.date === today).map((s) => s.hobbyId)),
-    [journal, today],
+  // The day the log flow writes to: today, or a past tile tapped on the grid
+  const [selectedDate, setSelectedDate] = useState(today)
+  const isToday = selectedDate === today
+  const doneOnDay = useMemo(
+    () => new Set(journal.filter((s) => s.date === selectedDate).map((s) => s.hobbyId)),
+    [journal, selectedDate],
   )
+
+  const resetPick = () => {
+    setActiveHobby(null)
+    setSelectedPieceId(null)
+    setPhotoId(null)
+  }
 
   const toggleHobby = (hobby: Hobby) => {
     const closing = activeHobby?.id === hobby.id
@@ -32,16 +41,23 @@ export function Today() {
     setPhotoId(null)
   }
 
+  const selectDay = (date: string) => {
+    // Tapping the selected tile again returns to today
+    const next = date === selectedDate ? today : date
+    if (next === selectedDate) return
+    setSelectedDate(next)
+    resetPick()
+  }
+
   const log = async () => {
     if (!activeHobby || logging) return
     setLogging(true)
     try {
-      const session = await logSession(activeHobby.id, selectedPieceId, photoId ?? undefined)
+      const session = await logSession(activeHobby.id, selectedPieceId, photoId ?? undefined, selectedDate)
       setPopSignal((n) => n + 1)
-      setActiveHobby(null)
-      setSelectedPieceId(null)
-      setPhotoId(null)
-      showToast(session.pieceName ? `Logged ✓ — ${session.pieceName}` : "Logged ✓ — today's tile just lit up")
+      resetPick()
+      const when = isToday ? "today's tile just lit up" : formatWhen(session.date)
+      showToast(session.pieceName ? `Logged ✓ — ${session.pieceName}` : `Logged ✓ — ${when}`)
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Could not log it')
     } finally {
@@ -74,16 +90,34 @@ export function Today() {
       <div className="eyebrow">{eyebrowDate()}</div>
       <h1 className="display-title mt-[6px]">Twelve weeks of making</h1>
 
-      <Heatmap heatmap={heatmap} hobbies={hobbies} today={today} popSignal={popSignal} />
+      <Heatmap
+        heatmap={heatmap}
+        hobbies={hobbies}
+        today={today}
+        selectedDate={selectedDate}
+        onSelectDay={selectDay}
+        popSignal={popSignal}
+      />
 
       <div className="section-label">
-        <span className="eyebrow">Today</span>
+        <span className="eyebrow">{isToday ? 'Today' : eyebrowDate(fromKey(selectedDate))}</span>
       </div>
-      <h2 className="font-display font-semibold text-[21px] tracking-[-0.01em] -mt-1">
-        What did you do?
-      </h2>
+      <div className="flex items-baseline justify-between gap-3 -mt-1">
+        <h2 className="font-display font-semibold text-[21px] tracking-[-0.01em]">
+          {isToday ? 'What did you do?' : 'What did you do that day?'}
+        </h2>
+        {!isToday && (
+          <button
+            type="button"
+            className="shrink-0 text-[13px] text-ink-soft underline underline-offset-2 hover:text-ink"
+            onClick={() => selectDay(today)}
+          >
+            ← Back to today
+          </button>
+        )}
+      </div>
 
-      <HobbyChips activeHobbyId={activeHobby?.id ?? null} doneToday={doneToday} onToggle={toggleHobby} />
+      <HobbyChips activeHobbyId={activeHobby?.id ?? null} doneOnDay={doneOnDay} onToggle={toggleHobby} />
 
       {activeHobby && (
         <div
@@ -119,7 +153,7 @@ export function Today() {
       )}
 
       <p className="text-[13px] text-muted mt-[14px]">
-        Tap a hobby to log it — today's tile lights up on the grid above.
+        Tap a hobby to log it — or tap a past tile above to log a day you missed.
       </p>
     </section>
   )

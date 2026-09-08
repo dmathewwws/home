@@ -14,6 +14,12 @@ export function toKey(d: Date): string {
 
 export const todayKey = (): string => toKey(new Date())
 
+/** 'YYYY-MM-DD' key → local-midnight Date. */
+export function fromKey(key: string): Date {
+  const [y, m, d] = key.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
 /** '2026-08-21' → 'AUG 21' (journal date stamps). */
 export function formatWhen(key: string): string {
   const [, m, d] = key.split('-')
@@ -33,8 +39,7 @@ export const monthLabel = (key: string): string => MONTHS[Number(key.split('-')[
 
 /** The n date keys ending at (and including) endKey, oldest first. */
 export function trailingDays(n: number, endKey: string): string[] {
-  const [y, m, d] = endKey.split('-').map(Number)
-  const end = new Date(y, m - 1, d)
+  const end = fromKey(endKey)
   const keys: string[] = []
   for (let i = n - 1; i >= 0; i--) {
     const day = new Date(end)

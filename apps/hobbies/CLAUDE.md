@@ -26,7 +26,7 @@ This is a pnpm workspace monorepo with three packages:
 #### Client (`/client/`)
 
 - `/client/src/components/` - React components
-  - `Heatmap.tsx` - The 12-week × 7-day grid; per-day dominant-hobby hue, intensity by session count, today-tile pop animation
+  - `Heatmap.tsx` - The 12-week × 7-day grid; each day tile splits into up to 4 blocks (one per hobby logged, most-logged first), each tinted by that hobby's own session count. Tiles are buttons: tapping one selects that day (`selectedDate`/`onSelectDay`, ink ring) and the selected tile pops after a log
   - `HobbyChips.tsx` - Hobby chip row + inline add-hobby form (name, learn/craft, hue swatch)
   - `PiecePicker.tsx` - Learn: rows with lesson-link pills; craft: prompt chips; inline add/edit-piece form; an Edit/Done toggle flips the list into edit mode (✎ rename, × delete-with-confirm)
   - `MuseSection.tsx` - AI ideation for craft hobbies (shimmer → 3 idea cards → save-as-piece)
@@ -40,7 +40,7 @@ This is a pnpm workspace monorepo with three packages:
   - `HomeButton.tsx` - Icon-only link back to the host console's landing grid (plain `<a>`, not a react-router `Link`)
 - `/client/src/hooks/` - React hooks
   - `useLocalFirstAuth.tsx` - Authentication state management, exports `AuthProvider` and `useLocalFirstAuth()` hook
-  - `useHobbyData.tsx` - All hobby data: loads `/api/bootstrap` once, patches state from mutation responses (`addHobby`, `addPiece`, `logSession`, `removeSession`, `summonMuse`)
+  - `useHobbyData.tsx` - All hobby data: loads `/api/bootstrap` once, patches state from mutation responses (`addHobby`, `addPiece`, `logSession(hobbyId, pieceId, photoId?, date?)`, `removeSession`, `summonMuse`); the journal stays date-descending (matching the server's order)
   - `useWebSockets.ts` - WebSocket connection hook (only the admin reset flow; hobby data does not broadcast)
 - `/client/src/lib/` - Client utilities
   - `api.ts` - Typed POST helpers (fresh profileJwt per call), `imgUrl()`
@@ -50,7 +50,7 @@ This is a pnpm workspace monorepo with three packages:
   - `image.ts` - Client-side photo processing (2048px full / 640px thumb JPEG, strips EXIF) + `putWithProgress`
 - `/client/src/routes/` - Route components
   - `index.tsx` - React Router root route (Today at `/`, Logs at `/logs`)
-  - `today.tsx` - Heatmap + hobby chips + piece picker + log flow
+  - `today.tsx` - Heatmap + hobby chips + piece picker + log flow; holds `selectedDate` (today, or a past tile tapped on the grid) so sessions can be back-filled — header, chip ticks, and the logged date all follow it
   - `logs.tsx` - The journal of every session (delete-only), AdminSection for admins
   - `not-found.tsx` - 404 page
 - `/client/src/app.tsx` - "Chalk & Paper" shell (430px paper column), auth gates (signed-out hero / waiting / member app), modals

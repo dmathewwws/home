@@ -6,12 +6,12 @@ import { useToast } from './Toast'
 
 interface HobbyChipsProps {
   activeHobbyId: string | null
-  /** Hobby ids with a session logged today (shown ticked). */
-  doneToday: Set<string>
+  /** Hobby ids with a session logged on the selected day (shown ticked). */
+  doneOnDay: Set<string>
   onToggle: (hobby: Hobby) => void
 }
 
-export function HobbyChips({ activeHobbyId, doneToday, onToggle }: HobbyChipsProps) {
+export function HobbyChips({ activeHobbyId, doneOnDay, onToggle }: HobbyChipsProps) {
   const { hobbies } = useHobbyData()
   const [adding, setAdding] = useState(false)
 
@@ -19,7 +19,7 @@ export function HobbyChips({ activeHobbyId, doneToday, onToggle }: HobbyChipsPro
     <div className="mt-[14px]">
       <div className="flex flex-wrap gap-[10px]">
         {hobbies.map((hobby) => {
-          const selected = activeHobbyId === hobby.id || doneToday.has(hobby.id)
+          const selected = activeHobbyId === hobby.id || doneOnDay.has(hobby.id)
           return (
             <button
               key={hobby.id}

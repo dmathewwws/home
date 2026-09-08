@@ -19,7 +19,13 @@ interface HobbyDataValue extends BootstrapData {
   addPiece: (hobbyId: string, name: string, links?: PieceLink[], source?: 'muse') => Promise<Piece>
   editPiece: (id: string, name: string, links?: PieceLink[]) => Promise<Piece>
   removePiece: (id: string) => Promise<void>
-  logSession: (hobbyId: string, pieceId: string | null, photoId?: string) => Promise<SessionEntry>
+  /** `date` defaults to today; pass a past 'YYYY-MM-DD' key to back-fill a day. */
+  logSession: (
+    hobbyId: string,
+    pieceId: string | null,
+    photoId?: string,
+    date?: string,
+  ) => Promise<SessionEntry>
   removeSession: (id: string) => Promise<void>
   summonMuse: (hobbyId: string, excludeTitles?: string[]) => ReturnType<typeof Api.summonMuse>
 }
@@ -85,14 +91,18 @@ export function HobbyDataProvider({ children }: { children: ReactNode }) {
   )
 
   const logSession = useCallback(
-    async (hobbyId: string, pieceId: string | null, photoId?: string) => {
-      const session = await Api.logSession(getProfileJwt, hobbyId, pieceId, todayKey(), photoId)
+    async (hobbyId: string, pieceId: string | null, photoId?: string, date = todayKey()) => {
+      const session = await Api.logSession(getProfileJwt, hobbyId, pieceId, date, photoId)
       setData((d) => {
         const heatmap = [...d.heatmap]
         const i = heatmap.findIndex((h) => h.date === session.date && h.hobbyId === session.hobbyId)
         if (i >= 0) heatmap[i] = { ...heatmap[i], count: heatmap[i].count + 1 }
         else heatmap.push({ date: session.date, hobbyId: session.hobbyId, count: 1 })
-        return { ...d, heatmap, journal: [session, ...d.journal] }
+        // Keep the journal date-descending so a back-dated entry slots in place
+        const at = d.journal.findIndex((s) => s.date <= session.date)
+        const journal = [...d.journal]
+        journal.splice(at < 0 ? journal.length : at, 0, session)
+        return { ...d, heatmap, journal }
       })
       return session
     },

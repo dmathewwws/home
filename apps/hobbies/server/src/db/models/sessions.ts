@@ -47,15 +47,16 @@ export async function deleteSession(db: Database, id: string): Promise<void> {
 }
 
 /**
- * Newest-first journal. Capped rather than paginated — personal scale; a
- * createdAt cursor can be added later without changing the response shape.
+ * Newest-first journal, by session day then log time (so a back-dated entry
+ * sits with its day, not at the top). Capped rather than paginated — personal
+ * scale; a cursor can be added later without changing the response shape.
  */
 export async function getJournal(db: Database, did: string, limit = 500): Promise<Session[]> {
   return await db
     .select()
     .from(sessions)
     .where(eq(sessions.did, did))
-    .orderBy(desc(sessions.createdAt))
+    .orderBy(desc(sessions.date), desc(sessions.createdAt))
     .limit(limit)
 }
 

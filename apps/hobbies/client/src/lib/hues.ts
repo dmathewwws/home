@@ -41,6 +41,10 @@ export function mix(hex: string, t: number): string {
   return `rgb(${m(r)},${m(g)},${m(b)})`
 }
 
-/** Cell intensity from that day's session count for the dominant hobby. */
+/**
+ * Block intensity from that hobby's session count that day:
+ * 1 → 0.75, 2 → 0.875, 3+ → full hue. The floor is high so a single
+ * session still reads as real colour against paper rather than a pale wash.
+ */
 export const intensityFor = (count: number): number =>
-  Math.min(1, 0.4 + 0.2 * (count - 1))
+  Math.min(1, 0.75 + 0.125 * (count - 1))
